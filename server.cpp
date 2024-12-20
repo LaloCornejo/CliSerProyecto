@@ -40,6 +40,10 @@ std::vector<qQuestion> techQuestions;
 std::vector<qQuestion> generalQuestions;
 std::map<int, Player> players;
 
+void clearScreen() {
+    printf("\033[H\033[J");
+}
+
 std::vector<qQuestion> loadQuestions(std::string& filename) {
   std::vector<qQuestion> questions;
   std::ifstream file(filename);
@@ -67,12 +71,11 @@ bool uniqueName(std::string name) {
   return true;
 }
 
-void moveCursor(int x, int y) {
-    printf("\033[%d;%dH", y, x);
-}
+// void moveCursor(int x, int y) {
+//     printf("\033[%d;%dH", y, x);
+// }
 
 void printScoreboard() {
-    moveCursor(1, 1);
     printf("\t==- Trivia Quiz -==\n"
            "+++++++++++++++++++++++++++++++\n"
            "Temi:\n"
@@ -81,45 +84,39 @@ void printScoreboard() {
            "+++++++++++++++++++++++++++++++\n"
            "Partecipanti (%zu)\n", players.size());
 
-    moveCursor(1, 7);
     for (const auto& player : players) {
         printf("%s\n", player.second.nombre.c_str());
     }
 
-    moveCursor(1, 7 + players.size() + 2);
     printf("Puntaggio tema 1\n");
     for (const auto& player : players) {
         printf("%s: %d\n", player.second.nombre.c_str(), player.second.techScore);
     }
 
-    moveCursor(1, 7 + players.size() + 4 + players.size());
     printf("Puntaggio tema 2\n");
     for (const auto& player : players) {
         printf("%s: %d\n", player.second.nombre.c_str(), player.second.generalScore);
     }
 
-    moveCursor(1, 7 + players.size() + 6 + players.size() * 2);
     printf("Quiz Tema 1 completato\n");
     for (const auto& player : players) {
-        if (player.second.hasCompletedTech && player.second.quizTheme == 1) {
+        if (player.second.hasCompletedTech) {
             printf("%s\n", player.second.nombre.c_str());
         }
     }
 
-    moveCursor(1, 7 + players.size() + 8 + players.size() * 2); 
     printf("Quiz Tema 2 completato\n");
     for (const auto& player : players) {
-        if (player.second.hasCompletedGeneral && player.second.quizTheme == 2) {
+        if (player.second.hasCompletedGeneral) {
             printf("%s\n", player.second.nombre.c_str());
         }
     }
 
-    moveCursor(1, 7 + players.size() + 10 + players.size() * 2); 
   printf("++++++++++++++++++++++++++++++++++++++++\n");
 }
 
 void updateScoreboard() {
-  system("clear");
+  clearScreen();
   while (true) {
     printScoreboard();
     std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -132,7 +129,6 @@ void handleNewPlayer(int socket) {
   bool validNickname = false;
   
   while (!validNickname) {
-    send(socket, "Enter nickname: ", 15, 0);
     int bytes = read(socket, buffer, BUFFER_SIZE);
     buffer[bytes] = '\0';
     nickname = std::string(buffer);
@@ -149,10 +145,6 @@ void handleNewPlayer(int socket) {
       newPlayer.quizTheme = 0;
       players[socket] = newPlayer;
       
-      std::string welcome = "Welcome " + nickname + "!\n1- Technology Quiz\n2- General Knowledge Quiz\nChoose quiz (1/2): ";
-      send(socket, welcome.c_str(), welcome.length(), 0);
-    } else {
-      send(socket, "Nickname already taken. Try again.\n", 32, 0);
     }
   }
 }
@@ -228,8 +220,6 @@ void run(int sd) {
       int theme = std::stoi(command);
       if (theme == 1 || theme == 2) {
         handleQuiz(sd, theme);
-      } else {
-        send(sd, "Invalid theme. Choose 1 or 2.\n", 28, 0);
       }
     }
   }
@@ -317,25 +307,31 @@ int main (int argc, char *argv[]) {
         exit(EXIT_FAILURE);
       }
 
-      printf("New connection, ip: %s, port: %d\n", inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port));
+      // printf("New connection, ip: %s, port: %d\n", inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port));
+      try {
+        // send(newSocket, "Welcome to the Trivia Quiz!\n", 27, 0);
+        players[newSocket] = Player();
+        players[newSocket].nombre = recv(newSocket, buffer, BUFFER_SIZE, 0);
+      } catch (std::exception& e) {
+        std::cerr << e.what() << std::endl;
+      }
       for (int i = 0; i < MAX_CLIENTS; i++) {
         if (playerSockets[i] == 0) {
           playerSockets[i] = newSocket;
-          printf("Adding to list of sockets as %d\n", i);
+          // printf("Adding to list of sockets as %d\n", i);
           break;
         }
       }
     }
 
-
     for(int i = 0; i < MAX_CLIENTS; i++ ){
     sd = playerSockets[i];
+    // not entering here *HERE*
       if( FD_ISSET(sd, &readfds)) {
-        // not entering here *HERE*
-        std::cerr << "Reading" << std::endl;
         int valRead = read(sd, buffer, BUFFER_SIZE);
         if( valRead == 0 ) {
           getpeername(sd, (struct sockaddr*)&clientAddr, &addrLen);
+          moveCursor(1, 7 + players.size() + 10 + players.size() * 2);
           printf("Client disconnected, ip %s, port %d\n", inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port));
           close(sd);
           playerSockets[i] = 0;

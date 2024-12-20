@@ -14,17 +14,32 @@ void clearScreen() {
     printf("\033[H\033[J");
 }
 
-void showMenu() {
+void frontPage() {
   clearScreen();
   printf("\n==- Trivia Quiz Game -==\n");
-  printf("1. Start Game\n");
-  printf("2. Exit\n");
-  printf("Choose an option: ");
+  printf("+++++++++++++++++++++++++++++\n");
+  printf("Menu\n");
+  printf("1. Comincia una sessione di trivia\n");
+  printf("2. Esci\n");
+  printf("La tua scelta: ");
 }
 
-void handleQuiz(int sock) {
-  std::cerr << "handleQuiz\n";
+void sNickname() {
+  printf("Trivia Quiz\n");
+  printf("+++++++++++++++++++++++++++++\n");
+  printf("Sceglie u nickname(deve essere univoco): ");
+}
 
+void sTheme() {
+  printf("Quiz disponibili\n");
+  printf("+++++++++++++++++++++++++++++\n");
+  printf("1 - Curiosita sulla tecnologia\n");
+  printf("2 - Cultura generale\n");
+  printf("+++++++++++++++++++++++++++++\n");
+  printf("La tua scelta: ");
+}
+
+void handleQuiz(int sock, std::string theme) {
   char buffer[BUFFER_SIZE];
   std::string userInput;
   bool quizActive = true;
@@ -38,6 +53,12 @@ void handleQuiz(int sock) {
       break;
     }
 
+    clearScreen();
+
+    std::string qThemes = (theme == "1") ? "Curiosita sulla tecnologia" : "Cultura generale";
+
+    printf("Quiz - %s\n", qThemes.c_str());
+    printf("+++++++++++++++++++++++++++++\n");
     printf("\n%s\n", buffer);
 
     if(strstr(buffer, "Quiz completed!") ||
@@ -61,10 +82,14 @@ int main (int argc, char *argv[]) {
   int sock = 0;
   struct sockaddr_in serverAddr;
   std::string userInput;
+  std::string nickname;
+  std::string theme;
   bool running = true;
 
   while(running) {
-    showMenu();
+    sNickname();
+    std::getline(std::cin, nickname);
+    frontPage();
     std::getline(std::cin, userInput);
 
     if(userInput == "1") {
@@ -90,9 +115,13 @@ int main (int argc, char *argv[]) {
       }
 
       clearScreen();
-      printf("\nConnected to server\n");
-      handleQuiz(sock);
-      // close(sock);
+      send(sock, nickname.c_str(), nickname.size(), 0);
+
+      sTheme();
+      std::getline(std::cin, theme);
+
+      handleQuiz(sock, theme);
+      close(sock);
     } else if(userInput == "2") {
       running = false;
     } else {
