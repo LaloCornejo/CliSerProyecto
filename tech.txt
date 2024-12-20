@@ -1,0 +1,5 @@
+Who founded Microsoft?|Bill Gates and Paul Allen
+Which company introduced the first commercial personal computer in 1981?|IBM
+Who invented the World Wide Web?|Tim Berners-Lee
+What does CPU stand for?|Central Processing Unit
+What programming language was created by Guido van Rossum?|Python
