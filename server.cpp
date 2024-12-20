@@ -73,32 +73,32 @@ void moveCursor(int x, int y) {
 
 void printScoreboard() {
     moveCursor(1, 1);
-    printf("\n\nTrivia Quiz\n"
-           "++++++++\n"
+    printf("\t==- Trivia Quiz -==\n"
+           "+++++++++++++++++++++++++++++++\n"
            "Temi:\n"
            "1- Curiosita sulla tecnologia\n"
            "2- Cultura Generale\n"
-           "+++++++++++++++-\n"
+           "+++++++++++++++++++++++++++++++\n"
            "Partecipanti (%zu)\n", players.size());
 
-    moveCursor(1, 6);
+    moveCursor(1, 7);
     for (const auto& player : players) {
         printf("%s\n", player.second.nombre.c_str());
     }
 
-    moveCursor(1, 6 + players.size() + 2);
+    moveCursor(1, 7 + players.size() + 2);
     printf("Puntaggio tema 1\n");
     for (const auto& player : players) {
         printf("%s: %d\n", player.second.nombre.c_str(), player.second.techScore);
     }
 
-    moveCursor(1, 6 + players.size() + 4 + players.size());
+    moveCursor(1, 7 + players.size() + 4 + players.size());
     printf("Puntaggio tema 2\n");
     for (const auto& player : players) {
         printf("%s: %d\n", player.second.nombre.c_str(), player.second.generalScore);
     }
 
-    moveCursor(1, 6 + players.size() + 6 + players.size() * 2);
+    moveCursor(1, 7 + players.size() + 6 + players.size() * 2);
     printf("Quiz Tema 1 completato\n");
     for (const auto& player : players) {
         if (player.second.hasCompletedTech && player.second.quizTheme == 1) {
@@ -106,7 +106,7 @@ void printScoreboard() {
         }
     }
 
-    moveCursor(1, 6 + players.size() + 8 + players.size() * 2); 
+    moveCursor(1, 7 + players.size() + 8 + players.size() * 2); 
     printf("Quiz Tema 2 completato\n");
     for (const auto& player : players) {
         if (player.second.hasCompletedGeneral && player.second.quizTheme == 2) {
@@ -114,13 +114,16 @@ void printScoreboard() {
         }
     }
 
-    moveCursor(1, 6 + players.size() + 10 + players.size() * 2); 
-  printf("+++++++++++++++\n");
+    moveCursor(1, 7 + players.size() + 10 + players.size() * 2); 
+  printf("++++++++++++++++++++++++++++++++++++++++\n");
 }
 
 void updateScoreboard() {
+  system("clear");
+  while (true) {
     printScoreboard();
     std::this_thread::sleep_for(std::chrono::seconds(1));
+  }
 }
 
 void handleNewPlayer(int socket) {
@@ -231,19 +234,32 @@ void run(int sd) {
     }
   }
   
-  updateScoreboard();
+  // updateScoreboard();
 }
 
 
 int main (int argc, char *argv[]) {
 
-  updateScoreboard();
-  std::string techFile = "tech.txt";
-  std::string generalFile = "general.txt";
-  techQuestions = loadQuestions(techFile);
-  generalQuestions = loadQuestions(generalFile);
+  std::thread t(updateScoreboard);
+  t.detach();
 
-int serverSocket, maxSd, sd, activity, newSocket;
+  std::string generalFile = "general.txt";
+  std::string techFile = "tech.txt";
+  try {
+    generalQuestions = loadQuestions(generalFile);
+    // std::cerr << "Caricamento domande completato" << std::endl;
+  } catch (std::exception& e) {
+    std::cerr << e.what() << std::endl;
+  }
+
+  try {
+    techQuestions = loadQuestions(techFile);
+    // std::cerr << "Caricamento domande completato" << std::endl;
+  } catch (std::exception& e) {
+    std::cerr << e.what() << std::endl;
+  }
+
+  int serverSocket, maxSd, sd, activity, newSocket;
   struct sockaddr_in serverAddr, clientAddr;
   int playerSockets[MAX_CLIENTS] = {0};
   socklen_t addrLen;
@@ -273,7 +289,7 @@ int serverSocket, maxSd, sd, activity, newSocket;
   }
 
   addrLen = sizeof(clientAddr);
-  printf("Listening port: %d\n", PORT);
+  // printf("Listening port: %d\n", PORT);
 
   while(true) {
     FD_ZERO(&readfds);
@@ -301,8 +317,7 @@ int serverSocket, maxSd, sd, activity, newSocket;
         exit(EXIT_FAILURE);
       }
 
-      printf("New connection, socket fd is %d, ip is: %s, port: %d\n", newSocket, inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port));
-
+      printf("New connection, ip: %s, port: %d\n", inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port));
       for (int i = 0; i < MAX_CLIENTS; i++) {
         if (playerSockets[i] == 0) {
           playerSockets[i] = newSocket;
@@ -311,9 +326,13 @@ int serverSocket, maxSd, sd, activity, newSocket;
         }
       }
     }
+
+
     for(int i = 0; i < MAX_CLIENTS; i++ ){
     sd = playerSockets[i];
       if( FD_ISSET(sd, &readfds)) {
+        // not entering here *HERE*
+        std::cerr << "Reading" << std::endl;
         int valRead = read(sd, buffer, BUFFER_SIZE);
         if( valRead == 0 ) {
           getpeername(sd, (struct sockaddr*)&clientAddr, &addrLen);
@@ -321,7 +340,8 @@ int serverSocket, maxSd, sd, activity, newSocket;
           close(sd);
           playerSockets[i] = 0;
         } else {
-        run(sd);
+          std::cerr << "Running" << std::endl;
+          run(sd);
         }
       }
     }
