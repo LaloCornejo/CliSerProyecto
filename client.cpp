@@ -40,22 +40,24 @@ void sTheme() {
     printf("La tua scelta: ");
 }
 
-void handleQuiz(int sock, std::string theme) {
+void handleQuiz(int sock, const std::string& theme) {
+    send(sock, theme.c_str(), theme.length(), 0);
+    printf("Sended theme: %s\n", theme.c_str());
     char buffer[BUFFER_SIZE];
     std::string userInput;
     bool quizActive = true;
 
     while (quizActive) {
-        memset(buffer, 0, BUFFER_SIZE);
-        int bytesRead = read(sock, buffer, BUFFER_SIZE);
+        // memset(buffer, 0, BUFFER_SIZE);
+        ssize_t bytesRead = read(sock, buffer, BUFFER_SIZE);
         if (bytesRead <= 0) {
             perror("Server disconnected or error reading from server");
             break;
         }
 
         clearScreen();
-        std::string qThemes = (theme == "1") ? "Curiosita sulla tecnologia" : "Cultura generale";
-        printf("Quiz - %s\n", qThemes.c_str());
+        const char* qThemes = (theme == "1") ? "Curiosita sulla tecnologia" : "Cultura generale";
+        printf("Quiz - %s\n", qThemes);
         printf("+++++++++++++++++++++++++++++\n");
         printf("\n%s\n", buffer);
 
@@ -69,7 +71,7 @@ void handleQuiz(int sock, std::string theme) {
         }
 
         std::getline(std::cin, userInput);
-        send(sock, userInput.c_str(), userInput.size(), 0);
+        send(sock, userInput.c_str(), userInput.length(), 0);
 
         bool correct;
         read(sock, &correct, sizeof(correct));
@@ -80,7 +82,6 @@ void handleQuiz(int sock, std::string theme) {
         } else {
             printf("\nWrong answer\n");
         }
-        // printf("\nPress Enter to continue...\n");
         std::getline(std::cin, userInput);
     }
 }
@@ -125,24 +126,33 @@ int main(int argc, char* argv[]) {
                 continue;
             }
 
-            bool an = false;
-            while(!an) {
-              sNickname();
-              std::getline(std::cin, nickname);
-              send(sock, nickname.c_str(), nickname.size(), 0);
-              if(read(sock, &an, sizeof(an)) == false) {
-               printf("Nickname gia in uso, scegline un altro\n");
-              } else {
-                an = true;
-                clearScreen();
-                printf("Benvenuto %s!\n", nickname.c_str());
-                std::getline(std::cin, userInput);
-              }
+            send(sock, "1", 1, 0);
+
+            bool nicknameAccepted = false;
+            while (!nicknameAccepted) {
+                sNickname();
+                std::getline(std::cin, nickname);
+                
+                // Send nickname to server
+                send(sock, nickname.c_str(), nickname.length(), 0);
+                
+                // Wait for server response
+                bool response;
+                read(sock, &response, sizeof(response));
+                
+                if (response) {
+                    nicknameAccepted = true;
+                    clearScreen();
+                    printf("Benvenuto %s!\nPress enter to continue... ", nickname.c_str());
+                    std::getline(std::cin, userInput);
+                } else {
+                    printf("Nickname gia in uso, scegline un altro\n");
+                    sleep(1);
+                }
             }
 
             sTheme();
             std::getline(std::cin, theme);
-            // send(sock, theme.c_str(), theme.size(), 0);
 
             handleQuiz(sock, theme);
             close(sock);

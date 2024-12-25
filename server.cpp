@@ -28,6 +28,7 @@ struct Player {
     int generalScore;
     bool hasCompletedTech;
     bool hasCompletedGeneral;
+    int quizTheme; 
 };
 
 struct qQuestion {
@@ -39,10 +40,6 @@ std::vector<qQuestion> techQuestions;
 std::vector<qQuestion> generalQuestions;
 std::map<int, Player> players;
 std::mutex playersMutex;
-
-void clearScreen() {
-    printf("\033[H\033[J");
-}
 
 std::vector<qQuestion> loadQuestions(std::string& filename) {
     std::vector<qQuestion> questions;
@@ -77,52 +74,92 @@ bool uniqueName(std::string name) {
 }
 
 void printScoreboard() {
-    clearScreen();
-    printf("\t==- Trivia Quiz -==\n"
-           "+++++++++++++++++++++++++++++++\n"
-           "Temi:\n"
-           "1- Curiosita sulla tecnologia\n"
-           "2- Cultura Generale\n"
-           "+++++++++++++++++++++++++++++++\n"
-           "Partecipanti (%zu)\n", players.size());
-
+    moveCursor(1, 1);
+    printf("\033[2J");
+    
+    // Header
+    printf("\033[1;36m==- Trivia Quiz -==\033[0m\n");
+    printf("━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+    
+    // Theme section
+    moveCursor(4, 1);
+    printf("Temi:\n");
+    printf("1- Curiosita sulla tecnologia\n");
+    printf("2- Cultura Generale\n");
+    printf("━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+    
+    // Participants section
+    moveCursor(9, 1);
+    printf("\033[1mPartecipanti (%zu)\033[0m\n", players.size());
+    int currentLine = 10;
     for (const auto& player : players) {
-        printf("\t* %s\n", player.second.nombre.c_str());
+        moveCursor(currentLine++, 2);
+        printf("• %s\n", player.second.nombre.c_str());
     }
-
-    printf("Puntaggio tema 1\n");
+    
+    // Scores section
+    currentLine += 1;
+    moveCursor(currentLine++, 1);
+    printf("\033[1mPunteggio tema 1\033[0m\n");
     for (const auto& player : players) {
-        if(player.second.techScore != 0)
+        if(player.second.techScore != 0) {
+            moveCursor(currentLine++, 2);
             printf("%s: %d\n", player.second.nombre.c_str(), player.second.techScore);
+        }
     }
-
-    printf("Puntaggio tema 2\n");
+    
+    currentLine += 1;
+    moveCursor(currentLine++, 1);
+    printf("\033[1mPunteggio tema 2\033[0m\n");
     for (const auto& player : players) {
-        if(player.second.generalScore != 0)
+        if(player.second.generalScore != 0) {
+            moveCursor(currentLine++, 2);
             printf("%s: %d\n", player.second.nombre.c_str(), player.second.generalScore);
+        }
     }
-
-    printf("Quiz Tema 1 completato\n");
+    
+    // Completion status section
+    currentLine += 1;
+    moveCursor(currentLine++, 1);
+    printf("\033[1mQuiz Tema 1 completato\033[0m\n");
     for (const auto& player : players) {
         if (player.second.hasCompletedTech) {
+            moveCursor(currentLine++, 2);
             printf("%s\n", player.second.nombre.c_str());
         }
     }
-
-    printf("Quiz Tema 2 completato\n");
+    
+    currentLine += 1;
+    moveCursor(currentLine++, 1);
+    printf("\033[1mQuiz Tema 2 completato\033[0m\n");
     for (const auto& player : players) {
         if (player.second.hasCompletedGeneral) {
+            moveCursor(currentLine++, 2);
             printf("%s\n", player.second.nombre.c_str());
         }
     }
+    
+    currentLine += 1;
+    moveCursor(currentLine, 1);
+    printf("━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+    
+    moveCursor(currentLine + 2, 1);
+    printf("\033[K"); 
+    fflush(stdout);
+}
 
-    printf("++++++++++++++++++++++++++++++++++++++++\n");
+void displayMessage(const std::string& message) {
+    printf("\033[s");
+    printf("\033[999;1H");
+    printf("\033[K%s", message.c_str());
+    printf("\033[u");
+    fflush(stdout);
 }
 
 void updateScoreboard() {
     while (true) {
         printScoreboard();
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        std::this_thread::sleep_for(std::chrono::seconds(3));
     }
 }
 
@@ -131,16 +168,17 @@ void handleNewPlayer(int socket) {
     bool validNickname = false;
 
     while (!validNickname) {
-        ssize_t bytesRead = read(socket, buffer, BUFFER_SIZE);
-        if (bytesRead <= 0) {
+        ssize_t bytes_read = read(socket, buffer, BUFFER_SIZE);
+        if (bytes_read <= 0) {
             close(socket);
             return;
         }
 
-        std::string nickname(buffer, bytesRead);
-        nickname.erase(std::remove(nickname.begin(), nickname.end(), '\n'), nickname.end());
+        displayMessage("Received nickname: " + std::string(buffer));
 
-
+        buffer[bytes_read] = '\0';
+        std::string nickname(buffer);
+        
         if (uniqueName(nickname)) {
             validNickname = true;
             Player newPlayer;
@@ -153,11 +191,9 @@ void handleNewPlayer(int socket) {
 
             std::lock_guard<std::mutex> lock(playersMutex);
             players[socket] = newPlayer;
-
-            std::cerr << "Nickname accepted\n";
+            
             send(socket, &validNickname, sizeof(validNickname), 0);
         } else {
-            std::cerr << "Nickname already in use\n";
             send(socket, &validNickname, sizeof(validNickname), 0);
         }
     }
@@ -202,18 +238,11 @@ void handleQuiz(int socket, int theme) {
     send(socket, finalMsg.c_str(), finalMsg.length(), 0);
 }
 
-// Function to handle received commands
 void run(int clientSocket) {
-    // char buffer[BUFFER_SIZE];
-    // int bytes = read(clientSocket, buffer, BUFFER_SIZE);
-    // buffer[bytes] = '\0';
-    // std::string command(buffer);
-    // command.erase(std::remove(command.begin(), command.end(), '\n'), command.end());
-
     auto it = players.find(clientSocket);
     if (it == players.end()) {
         handleNewPlayer(clientSocket);
-        std::cerr << "New player connected\n";
+        displayMessage("New player connected");
     } else {
         if (it->second.quizTheme == 0) {
             try {
@@ -223,6 +252,7 @@ void run(int clientSocket) {
                     std::string theme(buffer, bytesRead);
                     theme.erase(std::remove(theme.begin(), theme.end(), '\n'), theme.end());
                     int themeNum = std::stoi(theme);
+                    send(clientSocket, "ok", 2, 0);
                     if (themeNum == 1 || themeNum == 2) {
                         handleQuiz(clientSocket, themeNum);
                     } else {
@@ -237,6 +267,17 @@ void run(int clientSocket) {
                 std::string errorMsg = "Invalid theme. Please choose theme 1 or 2\n";
                 send(clientSocket, errorMsg.c_str(), errorMsg.length(), 0);
             }
+        }
+    }
+}
+
+void cleanupDisconnectedPlayers() {
+    std::lock_guard<std::mutex> lock(playersMutex);
+    for (auto it = players.begin(); it != players.end();) {
+        if (send(it->first, "", 0, MSG_NOSIGNAL) < 0) {
+            it = players.erase(it);
+        } else {
+            ++it;
         }
     }
 }
@@ -260,7 +301,7 @@ int main(int argc, char* argv[]) {
         std::cerr << e.what() << std::endl;
     }
 
-    int serverSocket,playerSocket, maxSd, sd, activity, newSocket;
+    int serverSocket, maxSd, sd, activity, newSocket;
     struct sockaddr_in serverAddr, clientAddr;
     int playerSockets[MAX_CLIENTS] = {0};
     socklen_t addrLen;
@@ -292,6 +333,10 @@ int main(int argc, char* argv[]) {
 
     addrLen = sizeof(clientAddr);
 
+    struct timeval timeout;
+    timeout.tv_sec = 60;
+    timeout.tv_usec = 0;
+
     while (true) {
         FD_ZERO(&readfds);
         FD_SET(serverSocket, &readfds);
@@ -307,7 +352,7 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        activity = select(maxSd + 1, &readfds, NULL, NULL, NULL);
+        activity = select(maxSd + 1, &readfds, NULL, NULL, &timeout);
         if ((activity < 0) && (errno != EINTR)) {
             perror("Error select");
         }
@@ -318,15 +363,18 @@ int main(int argc, char* argv[]) {
                 exit(EXIT_FAILURE);
             }
 
-            // handleNewPlayer(newSocket);
+            displayMessage("New connection from " + std::string(inet_ntoa(clientAddr.sin_addr)));
 
             for (int i = 0; i < MAX_CLIENTS; i++) {
                 if (playerSockets[i] == 0) {
+                    displayMessage("Adding to list of sockets at index " + std::to_string(i) + " socket " + std::to_string(newSocket));
                     playerSockets[i] = newSocket;
                     break;
                 }
             }
         }
+
+        sleep(1);
 
         for (int i = 0; i < MAX_CLIENTS; i++) {
             sd = playerSockets[i];
@@ -334,16 +382,23 @@ int main(int argc, char* argv[]) {
                 int valRead = read(sd, buffer, BUFFER_SIZE);
                 if (valRead == 0) {
                     getpeername(sd, (struct sockaddr*)&clientAddr, &addrLen);
-                    printf("Client disconnected, ip %s, port %d\n", inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port));
+                     displayMessage("Host disconnected, ip " + std::string(inet_ntoa(clientAddr.sin_addr)) + ", port " + std::to_string(ntohs(clientAddr.sin_port)));
+                     {
+                        std::lock_guard<std::mutex> lock(playersMutex);
+                        players.erase(sd);
+                    }
                     close(sd);
                     playerSockets[i] = 0;
                 } else {
+                  displayMessage("Running quiz for socket " + std::to_string(sd));
                     run(sd);
                 }
             }
         }
+
+        cleanupDisconnectedPlayers(); 
     }
 
-    close(playerSocket);
+    close(serverSocket);
     return 0;
 }
