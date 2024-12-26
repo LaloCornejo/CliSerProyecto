@@ -1,168 +1,208 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <iostream>
-#include <string.h>
+#include <string>
+#include <cstring>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <signal.h>
 
 #define BUFFER_SIZE 1024
 
 void clearScreen() {
-    printf("\033[H\033[J");
+  system("clear");
 }
 
 void frontPage() {
-    clearScreen();
-    printf("\n==- Trivia Quiz Game -==\n");
-    printf("+++++++++++++++++++++++++++++\n");
-    printf("Menu\n");
-    printf("1. Comincia una sessione di trivia\n");
-    printf("2. Esci\n");
-    printf("La tua scelta: ");
+  clearScreen();
+  printf("\n==- Trivia Quiz Game -==\n");
+  printf("+++++++++++++++++++++++++++++\n");
+  printf("Menu\n");
+  printf("1. Comincia una sessione di trivia\n");
+  printf("2. Esci\n");
+  printf("La tua scelta: ");
 }
 
 void sNickname() {
-    clearScreen();
-    printf("Trivia Quiz\n");
-    printf("+++++++++++++++++++++++++++++\n");
-    printf("Scegli un nickname (deve essere univoco): ");
+  clearScreen();
+  printf("Trivia Quiz\n");
+  printf("+++++++++++++++++++++++++++++\n");
+  printf("Scegli un nickname (deve essere univoco): ");
 }
 
 void sTheme() {
-    clearScreen();
-    printf("Quiz disponibili\n");
-    printf("+++++++++++++++++++++++++++++\n");
-    printf("1 - Curiosita sulla tecnologia\n");
-    printf("2 - Cultura generale\n");
-    printf("+++++++++++++++++++++++++++++\n");
-    printf("La tua scelta: ");
+  clearScreen();
+  printf("Quiz disponibili\n");
+  printf("+++++++++++++++++++++++++++++\n");
+  printf("1 - Curiosita sulla tecnologia\n");
+  printf("2 - Cultura generale\n");
+  printf("+++++++++++++++++++++++++++++\n");
+  printf("La tua scelta: ");
 }
 
-void handleQuiz(int sock, const std::string& theme) {
-    send(sock, theme.c_str(), theme.length(), 0);
-    printf("Sended theme: %s\n", theme.c_str());
-    char buffer[BUFFER_SIZE];
-    std::string userInput;
-    bool quizActive = true;
+class TriviaClient {
+  private:
+    int sock;
+  struct sockaddr_in servAddr;
+  char buffer[BUFFER_SIZE];
+  std::string nickname;
+  bool isConnected;
 
-    while (quizActive) {
-        // memset(buffer, 0, BUFFER_SIZE);
-        ssize_t bytesRead = read(sock, buffer, BUFFER_SIZE);
-        if (bytesRead <= 0) {
-            perror("Server disconnected or error reading from server");
-            break;
-        }
+  void handleServerDisconnect() {
+    std::cout << "\nIl server si è disconnesso. Il quiz è terminato.\n";
+    close(sock);
+    isConnected = false;
+    sleep(2);
+  }
 
-        clearScreen();
-        const char* qThemes = (theme == "1") ? "Curiosita sulla tecnologia" : "Cultura generale";
-        printf("Quiz - %s\n", qThemes);
-        printf("+++++++++++++++++++++++++++++\n");
-        printf("\n%s\n", buffer);
-
-        if (strstr(buffer, "Quiz completed!") ||
-            strstr(buffer, "Quiz ended") ||
-            strstr(buffer, "already completed")) {
-            printf("\nPress Enter to continue...\n");
-            std::getline(std::cin, userInput);
-            quizActive = false;
-            continue;
-        }
-
-        std::getline(std::cin, userInput);
-        send(sock, userInput.c_str(), userInput.length(), 0);
-
-        bool correct;
-        read(sock, &correct, sizeof(correct));
-
-        clearScreen();
-        if (correct) {
-            printf("\nCorrect answer!\n");
-        } else {
-            printf("\nWrong answer\n");
-        }
-        std::getline(std::cin, userInput);
-    }
-}
-
-int main(int argc, char* argv[]) {
-    if (argc != 2) {
-        printf("Usage: %s <port>\n", argv[0]);
-        return 1;
+  bool connectToServer(int port) {
+    sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock < 0) {
+      std::cerr << "Errore nella creazione del socket\n";
+      return false;
     }
 
-    int port = atoi(argv[1]);
-    int sock = 0;
-    struct sockaddr_in serverAddr;
-    std::string userInput;
-    std::string nickname;
-    std::string theme;
-    bool running = true;
+    servAddr.sin_family = AF_INET;
+    servAddr.sin_port = htons(port);
 
-    while (running) {
-        frontPage();
-        std::getline(std::cin, userInput);
-
-        if (userInput == "1") {
-            sock = socket(AF_INET, SOCK_STREAM, 0);
-            if (sock < 0) {
-                perror("Error creating socket");
-                return 1;
-            }
-
-            serverAddr.sin_family = AF_INET;
-            serverAddr.sin_port = htons(port);
-
-            if (inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr) <= 0) {
-                perror("Invalid address");
-                close(sock);
-                continue;
-            }
-
-            if (connect(sock, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
-                perror("Connection failed");
-                close(sock);
-                continue;
-            }
-
-            send(sock, "1", 1, 0);
-
-            bool nicknameAccepted = false;
-            while (!nicknameAccepted) {
-                sNickname();
-                std::getline(std::cin, nickname);
-                
-                // Send nickname to server
-                send(sock, nickname.c_str(), nickname.length(), 0);
-                
-                // Wait for server response
-                bool response;
-                read(sock, &response, sizeof(response));
-                
-                if (response) {
-                    nicknameAccepted = true;
-                    clearScreen();
-                    printf("Benvenuto %s!\nPress enter to continue... ", nickname.c_str());
-                    std::getline(std::cin, userInput);
-                } else {
-                    printf("Nickname gia in uso, scegline un altro\n");
-                    sleep(1);
-                }
-            }
-
-            sTheme();
-            std::getline(std::cin, theme);
-
-            handleQuiz(sock, theme);
-            close(sock);
-        } else if (userInput == "2") {
-            running = false;
-        } else {
-            printf("\nInvalid option. Press Enter to continue...\n");
-            std::getline(std::cin, userInput);
-        }
+    if (inet_pton(AF_INET, "127.0.0.1", & servAddr.sin_addr) <= 0) {
+      std::cerr << "Indirizzo non valido\n";
+      return false;
     }
 
-    return 0;
+    if (connect(sock, (struct sockaddr * ) & servAddr, sizeof(servAddr)) < 0) {
+      std::cerr << "Connessione fallita\n";
+      return false;
+    }
+
+    isConnected = true;
+    return true;
+  }
+
+  bool setNickname() {
+    std::string input;
+    while (true) {
+      sNickname();
+      std::getline(std::cin, input);
+
+      if (!isConnected) return false;
+
+      ssize_t sent = send(sock, input.c_str(), input.length(), 0);
+      if (sent <= 0) {
+        handleServerDisconnect();
+        return false;
+      }
+
+      ssize_t bytes_read = read(sock, buffer, BUFFER_SIZE);
+      if (bytes_read <= 0) {
+        handleServerDisconnect();
+        return false;
+      }
+
+      if (buffer[0] == '1') {
+        nickname = input;
+        return true;
+      }
+      std::cout << "Nickname già in uso. Riprova.\n";
+      sleep(2);
+    }
+  }
+
+  void playQuiz() {
+    std::string input;
+    sTheme();
+    std::getline(std::cin, input);
+
+    if (input != "1" && input != "2") return;
+
+    if (send(sock, input.c_str(), input.length(), 0) <= 0) {
+      handleServerDisconnect();
+      return;
+    }
+
+    while (isConnected) {
+      ssize_t bytes_read = read(sock, buffer, BUFFER_SIZE);
+      if (bytes_read <= 0) {
+        handleServerDisconnect();
+        break;
+      }
+
+      buffer[bytes_read] = '\0';
+      std::string message(buffer);
+
+      if (message.find("completato") != std::string::npos ||
+        message.find("già completato") != std::string::npos) {
+        std::cout << message;
+        sleep(3);
+        break;
+      }
+
+      std::cout << message;
+      std::getline(std::cin, input);
+
+      if (input == "endquiz" || input == "show score") {
+        if (send(sock, input.c_str(), input.length(), 0) <= 0) {
+          handleServerDisconnect();
+          break;
+        }
+
+        if (input == "endquiz") {
+          bytes_read = read(sock, buffer, BUFFER_SIZE);
+          if (bytes_read > 0) {
+            buffer[bytes_read] = '\0';
+            std::cout << buffer;
+          }
+          break;
+        }
+
+        continue;
+      }
+
+      if (send(sock, input.c_str(), input.length(), 0) <= 0) {
+        handleServerDisconnect();
+        break;
+      }
+    }
+  }
+
+  public:
+    TriviaClient(): isConnected(false) {
+      signal(SIGPIPE, SIG_IGN);
+    }
+
+  void start(int port) {
+    while (true) {
+      frontPage();
+      std::string choice;
+      std::getline(std::cin, choice);
+
+      if (choice == "2") break;
+      if (choice != "1") continue;
+
+      if (!isConnected && !connectToServer(port)) {
+        std::cout << "Impossibile connettersi al server. Riprova più tardi.\n";
+        sleep(2);
+        continue;
+      }
+
+      if (setNickname()) {
+        playQuiz();
+      }
+    }
+
+    if (isConnected) {
+      close(sock);
+    }
+  }
+};
+
+int main(int argc, char * argv[]) {
+  if (argc != 2) {
+    std::cerr << "Uso: " << argv[0] << " <porta>\n";
+    return 1;
+  }
+
+  int port = std::stoi(argv[1]);
+  TriviaClient client;
+  client.start(port);
+  return 0;
 }
