@@ -5,8 +5,19 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <signal.h>
+#include <mutex>
+#include <fstream>
+#include <chrono>
 
 #define BUFFER_SIZE 1024
+
+std::ofstream logFile("cosole_log.txt", std::ios::app);
+std::mutex playersMutex;
+
+void logMessage(const std::string & message) {
+    std::lock_guard<std::mutex> lock(playersMutex);
+    logFile << "[" << std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()) << "] " << message << std::endl;
+}
 
 void clearScreen() {
   system("clear");
@@ -49,6 +60,7 @@ class TriviaClient {
 
   void handleServerDisconnect() {
     std::cout << "\nIl server si è disconnesso. Il quiz è terminato.\n";
+    logMessage("Il server si è disconnesso. Il quiz è terminato.");
     close(sock);
     isConnected = false;
     sleep(2);
@@ -58,6 +70,7 @@ class TriviaClient {
     sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0) {
       std::cerr << "Errore nella creazione del socket\n";
+      logMessage("Errore nella creazione del socket");
       return false;
     }
 
@@ -66,11 +79,13 @@ class TriviaClient {
 
     if (inet_pton(AF_INET, "127.0.0.1", & servAddr.sin_addr) <= 0) {
       std::cerr << "Indirizzo non valido\n";
+      logMessage("Indirizzo non valido");
       return false;
     }
 
     if (connect(sock, (struct sockaddr * ) & servAddr, sizeof(servAddr)) < 0) {
       std::cerr << "Connessione fallita\n";
+      logMessage("Connessione fallita");
       return false;
     }
 
@@ -87,6 +102,7 @@ class TriviaClient {
       if (!isConnected) return false;
 
       ssize_t sent = send(sock, input.c_str(), input.length(), 0);
+      logMessage("Sent: " + input);
       if (sent <= 0) {
         handleServerDisconnect();
         return false;
@@ -103,6 +119,7 @@ class TriviaClient {
         return true;
       }
       std::cout << "Nickname già in uso. Riprova.\n";
+      logMessage("Nickname già in uso. Riprova.");
       sleep(2);
     }
   }
@@ -115,6 +132,7 @@ class TriviaClient {
     if (input != "1" && input != "2") return;
 
     if (send(sock, input.c_str(), input.length(), 0) <= 0) {
+      logMessage("Errore nell'invio del tema");
       handleServerDisconnect();
       return;
     }
@@ -132,15 +150,18 @@ class TriviaClient {
       if (message.find("completato") != std::string::npos ||
         message.find("già completato") != std::string::npos) {
         std::cout << message;
+        logMessage("Quiz completato");
         sleep(3);
         break;
       }
 
       std::cout << message;
+      logMessage("Received question");
       std::getline(std::cin, input);
 
-      if (input == "endquiz" || input == "show score") {
+     if (input == "endquiz" || input == "show score") {
         if (send(sock, input.c_str(), input.length(), 0) <= 0) {
+          logMessage("Errore nell'invio del comando");
           handleServerDisconnect();
           break;
         }
@@ -158,6 +179,7 @@ class TriviaClient {
       }
 
       if (send(sock, input.c_str(), input.length(), 0) <= 0) {
+        logMessage("Errore nell'invio della risposta");
         handleServerDisconnect();
         break;
       }
