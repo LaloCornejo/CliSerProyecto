@@ -1,2 +1,13 @@
-[1735324992] Sent: Lalo
-[1735324994] Quiz completato
+[1735340316] Scelta: 1
+[1735340322] Nickname scelto: Juanito
+[1735340322] Sent: Juanito
+[1735340324] Tema scelto: 1
+[1735340324] Sent theme: 1
+[1735340324] Received question: 
+
+Quiz - Cultura Generale
+++++++++++++++++++++++++++++++++++++++++
+Who founded Microsoft?
+
+[1735340330] Answer: a
+[1735340330] Quiz completato

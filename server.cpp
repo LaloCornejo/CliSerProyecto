@@ -49,7 +49,7 @@ struct qQuestion {
 std::vector < qQuestion > techQuestions;
 std::vector < qQuestion > generalQuestions;
 std::map < int, Player > players;
-// Load questions
+
 std::vector < qQuestion > loadQuestions(const std::string & filename) {
   std::vector < qQuestion > questions;
   std::ifstream file(filename);
@@ -67,7 +67,6 @@ std::vector < qQuestion > loadQuestions(const std::string & filename) {
   return questions;
 }
 
-// Display functions
 void moveCursor(int x, int y) {
   printf("\033[%d;%dH", x, y);
 }
@@ -208,12 +207,13 @@ void handleQuiz(int socket) {
     buffer[bytes_read] = '\0';
   }
 
-  int theme = std::stoi(buffer);
+  char theme = buffer[0];
+  logMessage("Player " + players[socket].nombre + " selected quiz theme: " + theme);
 
   auto & player = players[socket];
-  bool & completed = (theme == 1) ? player.hasCompletedTech : player.hasCompletedGeneral;
-  int & score = (theme == 1) ? player.techScore : player.generalScore;
-  auto & questions = (theme == 1) ? techQuestions : generalQuestions;
+  bool & completed = (theme == '1') ? player.hasCompletedTech : player.hasCompletedGeneral;
+  int & score = (theme == '1') ? player.techScore : player.generalScore;
+  auto & questions = (theme == '1') ? techQuestions : generalQuestions;
 
   if (completed) {
     std::string msg = "Hai già completato questo quiz!\n";
@@ -226,12 +226,15 @@ void handleQuiz(int socket) {
   player.currentQuestion = 0;
 
   while (player.currentQuestion < questions.size()) {
+    memset(buffer, 0, BUFFER_SIZE);
     std::string questionMsg = std::string("\n\nQuiz - ") + ((player.quizTheme == 1) ? "Curiosita sulla tecnologia" : "Cultura Generale") + "\n++++++++++++++++++++++++++++++++++++++++\n" + questions[player.currentQuestion].question + "\n";
 
     logMessage("Sent question no." + std::to_string(player.currentQuestion) + " to player " + player.nombre);
     send(socket, questionMsg.c_str(), questionMsg.length(), 0);
 
     bytes_read = read(socket, buffer, BUFFER_SIZE);
+    logMessage("Answer received from player " + player.nombre + "is: " + buffer);
+
     if (bytes_read <= 0) {
       logMessage("Error reading answer from player " + player.nombre);
       break;
@@ -300,15 +303,14 @@ int main() {
   std::thread scoreboardThread(updateScoreboard);
   scoreboardThread.detach();
 
-  // Server setup
-  int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
+int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
   if (serverSocket < 0) {
     perror("Socket creation failed");
     logMessage("Socket creation failed.");
     return 1;
   }
 
-  // Set server socket to non-blocking
+  /*Set server socket to non-blocking*/
   fcntl(serverSocket, F_SETFL, O_NONBLOCK);
 
   struct sockaddr_in serverAddr;
@@ -316,7 +318,7 @@ int main() {
   serverAddr.sin_addr.s_addr = INADDR_ANY;
   serverAddr.sin_port = htons(PORT);
 
-  if (bind(serverSocket, (struct sockaddr * ) & serverAddr, sizeof(serverAddr)) < 0) {
+  if (bind(serverSocket, (struct sockaddr *) &serverAddr, sizeof(serverAddr)) < 0) {
     perror("Bind failed");
     logMessage("Bind failed.");
     return 1;
@@ -329,28 +331,28 @@ int main() {
   }
 
   fd_set readfds;
-  std::vector < int > clientSockets;
+  std::vector<int> clientSockets;
 
   while (true) {
-    FD_ZERO( & readfds);
-    FD_SET(serverSocket, & readfds);
+    FD_ZERO(&readfds);
+    FD_SET(serverSocket, &readfds);
     int maxSd = serverSocket;
 
-    for (int sock: clientSockets) {
-      FD_SET(sock, & readfds);
+    for (int sock : clientSockets) {
+      FD_SET(sock, &readfds);
       maxSd = std::max(maxSd, sock);
     }
 
-    if (select(maxSd + 1, & readfds, NULL, NULL, NULL) < 0) {
+    if (select(maxSd + 1, &readfds, NULL, NULL, NULL) < 0) {
       perror("Select error");
       logMessage("Select error.");
       continue;
     }
 
-    if (FD_ISSET(serverSocket, & readfds)) {
+    if (FD_ISSET(serverSocket, &readfds)) {
       struct sockaddr_in clientAddr;
       socklen_t addrLen = sizeof(clientAddr);
-      int newSocket = accept(serverSocket, (struct sockaddr * ) & clientAddr, & addrLen);
+      int newSocket = accept(serverSocket, (struct sockaddr *) &clientAddr, &addrLen);
 
       if (newSocket >= 0) {
         // Set client socket to non-blocking
@@ -361,17 +363,17 @@ int main() {
     }
 
     for (auto it = clientSockets.begin(); it != clientSockets.end();) {
-      int sock = * it;
-      if (FD_ISSET(sock, & readfds)) {
+      int sock = *it;
+      if (FD_ISSET(sock, &readfds)) {
         auto playerIt = players.find(sock);
         if (playerIt == players.end()) {
           handleNewPlayer(sock);
-        } else if (playerIt -> second.quizTheme == 0) {
+        } else if (playerIt->second.quizTheme == 0) {
           handleQuiz(sock);
         }
       }
 
-      // Check if socket is still valid
+      /*Check if socket is still valid*/
       if (send(sock, "", 0, MSG_NOSIGNAL) < 0) {
         close(sock);
         players.erase(sock);
