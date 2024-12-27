@@ -68,11 +68,13 @@ void moveCursor(int x, int y) {
 
 void printScoreboard() {
   system("clear");
-  printf("\033[1;36m==- Trivia Quiz -==\033[0m\n\n");
+printf("\t\033[1;36m==- Trivia Quiz -==\033[0m\n"
+    "++++++++++++++++++++++++++++++++++++++++\n");
 
   printf("Temi disponibili:\n");
   printf("1- Curiosita sulla tecnologia\n");
-  printf("2- Cultura Generale\n\n");
+printf("2- Cultura Generale\n"
+    "+++++++++++++++++++++++++++++++++++++++\n");
 
   std::lock_guard < std::mutex > lock(playersMutex);
 
@@ -205,8 +207,8 @@ void handleQuiz(int socket) {
   player.currentQuestion = 0;
 
   while (player.currentQuestion < questions.size()) {
-    std::string questionMsg = "Domanda " + std::to_string(player.currentQuestion + 1) +
-      ": " + questions[player.currentQuestion].question + "\n";
+    std::string questionMsg = std::string("\n\nQuiz - ") + ((player.quizTheme == 1) ? "Curiosita sulla tecnologia" : "Cultura Generale") + 
+        "\n++++++++++++++++++++++++++++++++++++++++\n" + questions[player.currentQuestion].question + "\n";
     send(socket, questionMsg.c_str(), questionMsg.length(), 0);
 
     bytes_read = read(socket, buffer, BUFFER_SIZE);
@@ -245,7 +247,7 @@ void handleQuiz(int socket) {
 void updateScoreboard() {
   while (true) {
     printScoreboard();
-    std::this_thread::sleep_for(std::chrono::seconds(2));
+    std::this_thread::sleep_for(std::chrono::seconds(1));
   }
 }
 
