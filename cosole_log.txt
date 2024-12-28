@@ -1,13 +1,37 @@
-[1735340316] Scelta: 1
-[1735340322] Nickname scelto: Juanito
-[1735340322] Sent: Juanito
-[1735340324] Tema scelto: 1
-[1735340324] Sent theme: 1
-[1735340324] Received question: 
+[1735356939] Scelta: 1
+[1735356942] Nickname scelto: Lalo
+[1735356942] Successfully sent 4 bytes: Lalo
+[1735356942] Buffer cleared after send
+[1735356946] Tema scelto: 1
+[1735356946] Successfully sent 1 bytes: 1
+[1735356946] Buffer cleared after send
+[1735356946] Received question: 
 
-Quiz - Cultura Generale
+Quiz - Curiosita sulla tecnologia
 ++++++++++++++++++++++++++++++++++++++++
 Who founded Microsoft?
 
-[1735340330] Answer: a
-[1735340330] Quiz completato
+[1735356951] Answer: Bill Gates
+[1735356951] Successfully sent 10 bytes: Bill Gates
+[1735356951] Buffer cleared after send
+[1735356951] Received question status: Risposta corretta!
+
+[1735356951] Received question: 
+
+Quiz - Curiosita sulla tecnologia
+++++++++++++++++++++++++++++++++++++++++
+Which company introduced the first commercial personal computer in 1981?
+
+[1735356957] Answer: IBM
+[1735356957] Successfully sent 3 bytes: IBM
+[1735356957] Buffer cleared after send
+[1735356957] Received question status: Risposta corretta!
+
+
+Quiz - Curiosita sulla tecnologia
+++++++++++++++++++++++++++++++++++++++++
+Who invented the World Wide Web?
+
+[1735356970] Il server si è disconnesso. Il quiz è terminato.
+[1735356973] Scelta: x
+[1735356974] Scelta: X

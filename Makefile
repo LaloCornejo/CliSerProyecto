@@ -11,6 +11,7 @@ server: server.cpp
 
 clean:
 	rm -f client server
+	rm -f *_log.txt
 
 .PHONY: all clean
 

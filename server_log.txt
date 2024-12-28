@@ -1,15 +1,17 @@
-[1735340312] Questions loaded successfully.
-[1735340316] New connection accepted.
-[1735340322] New player joined: Juanito
-[1735340324] Player Juanito selected quiz theme: 1
-[1735340324] Sent question no.0 to player Juanito
-[1735340324] Answer received from player Juanitois: 
-[1735340324] Error reading answer from player Juanito
-[1735340324] Player Juanito completed the quiz with score: 0
-[1735340330] Player Juanito selected quiz theme: a
-[1735340330] Sent question no.0 to player Juanito
-[1735340330] Answer received from player Juanitois: 
-[1735340330] Error reading answer from player Juanito
-[1735340330] Player Juanito completed the quiz with score: 0
-[1735340331] Error reading quiz theme from player socket: 5
-[1735340331] Connection closed for socket: 5
+[1735356935] Questions loaded successfully.
+[1735356939] New connection accepted.
+[1735356942] New player joined: Lalo
+[1735356946] Player Lalo selected quiz theme: 1
+[1735356946] Sent question no.0 to player Lalo
+[1735356946] Q: Who founded Microsoft?
+[1735356946] A: Bill Gates
+[1735356951] Answer received from player Lalo is: Bill Gates
+[1735356951] Player Lalo answered question 0 with Bill Gates. Correct: 1
+[1735356951] Sent question no.1 to player Lalo
+[1735356951] Q: Which company introduced the first commercial personal computer in 1981?
+[1735356951] A: IBM
+[1735356957] Answer received from player Lalo is: IBM
+[1735356957] Player Lalo answered question 1 with IBM. Correct: 1
+[1735356957] Sent question no.2 to player Lalo
+[1735356957] Q: Who invented the World Wide Web?
+[1735356957] A: Tim Berners-Lee

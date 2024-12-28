@@ -31,6 +31,57 @@ void logMessage(const std::string & message) {
   logFile << "[" << std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()) << "] " << message << std::endl;
 }
 
+bool secureSend(int sock, const std::string& message) {
+    size_t total_sent = 0;
+    size_t len = message.length();
+    
+    while (total_sent < len) {
+        ssize_t bytes_sent = send(sock, message.c_str() + total_sent, len - total_sent, 0);
+        if (bytes_sent < 0) {
+            if (errno == EWOULDBLOCK || errno == EAGAIN) {
+                continue;
+            }
+            logMessage("Error in send operation to socket " + std::to_string(sock));
+            return false;
+        }
+        total_sent += bytes_sent;
+    }
+    return true;
+}
+
+std::pair<bool, std::string> secureRead(int sock, size_t maxSize) {
+    std::string result;
+    std::vector<char> buffer(maxSize);
+    
+    while (true) {
+        ssize_t bytes_read = read(sock, buffer.data(), maxSize - result.length());
+        
+        if (bytes_read < 0) {
+            if (errno == EWOULDBLOCK || errno == EAGAIN) {
+                if (result.empty()) {
+                    continue;
+                }
+                break;
+            }
+            logMessage("Error in read operation from socket " + std::to_string(sock));
+            return {false, ""};
+        } else if (bytes_read == 0) {
+            if (result.empty()) {
+                return {false, ""};
+            }
+            break;
+        }
+        
+        result.append(buffer.data(), bytes_read);
+        if (bytes_read < static_cast<ssize_t>(maxSize) || 
+            result.length() >= maxSize) {
+            break;
+        }
+    }
+    
+    return {true, result};
+}
+
 struct Player {
   std::string nombre;
   int techScore;
@@ -139,12 +190,14 @@ void sendScoreboard(int socket) {
 
   std::string scoreboardStr = ss.str();
   logMessage("Sending scoreboard to player " + std::to_string(socket));
-  send(socket, scoreboardStr.c_str(), scoreboardStr.length(), 0);
+if (!secureSend(socket, scoreboardStr)) {
+    logMessage("Error sending scoreboard to player " + std::to_string(socket));
+}
 }
 
-bool checkNickname(const std::string & name) {
+bool checkNickname(const std::string &name) {
   std::lock_guard < std::mutex > lock(playersMutex);
-  for (const auto & player: players) {
+  for (const auto &player: players) {
     if (player.second.nombre == name) {
       return false;
     }
@@ -157,15 +210,12 @@ void handleNewPlayer(int socket) {
   bool validNickname = false;
 
   while (!validNickname) {
-    ssize_t bytes_read = read(socket, buffer, BUFFER_SIZE);
-    if (bytes_read <= 0) {
-      close(socket);
-      logMessage("Error reading nickname from new player.");
-      return;
+    auto [success, nickname] = secureRead(socket, BUFFER_SIZE);
+    if (!success) {
+        close(socket);
+        logMessage("Error reading nickname from new player.");
+        return;
     }
-
-    buffer[bytes_read] = '\0';
-    std::string nickname(buffer);
 
     if (checkNickname(nickname)) {
       validNickname = true;
@@ -184,30 +234,31 @@ void handleNewPlayer(int socket) {
         players[socket] = newPlayer;
       }
 
-      send(socket, "1", 1, 0);
+      if (!secureSend(socket, "1")) {
+        logMessage("Error sending confirmation to new player.");
+      }
       logMessage("New player joined: " + nickname);
     } else {
-      send(socket, "0", 1, 0);
+      if (!secureSend(socket, "0")) {
+        logMessage("Error sending nickname in use message to new player.");
+      }
       logMessage("Nickname already in use: " + nickname);
     }
   }
 }
 
 void handleQuiz(int socket) {
-  char buffer[BUFFER_SIZE];
-  ssize_t bytes_read = read(socket, buffer, BUFFER_SIZE);
-  if (bytes_read <= 0) {
-    logMessage("Error reading quiz theme from player socket: " + std::to_string(socket));
-    return;
+  auto [success, themeStr] = secureRead(socket, BUFFER_SIZE);
+  if (!success) {
+      logMessage("Error reading quiz theme from player socket: " + std::to_string(socket));
+      return;
   }
 
-  if (buffer[bytes_read - 1] == '\n') {
-    buffer[bytes_read - 1] = '\0';
-  } else {
-    buffer[bytes_read] = '\0';
+  if (!themeStr.empty() && themeStr.back() == '\n') {
+      themeStr.pop_back();
   }
 
-  char theme = buffer[0];
+  char theme = themeStr[0];
   logMessage("Player " + players[socket].nombre + " selected quiz theme: " + theme);
 
   auto & player = players[socket];
@@ -216,37 +267,39 @@ void handleQuiz(int socket) {
   auto & questions = (theme == '1') ? techQuestions : generalQuestions;
 
   if (completed) {
-    std::string msg = "Hai già completato questo quiz!\n";
-    send(socket, msg.c_str(), msg.length(), 0);
+    std::string msg = "Hai gia completato questo quiz!\n";
+    if (!secureSend(socket, msg)) {
+        logMessage("Error sending quiz completed message to player " + player.nombre);
+    }
     logMessage("Player " + player.nombre + " attempted to retake completed quiz.");
     return;
   }
 
-  player.quizTheme = theme;
+  player.quizTheme = theme - '0';
   player.currentQuestion = 0;
 
   while (player.currentQuestion < questions.size()) {
-    memset(buffer, 0, BUFFER_SIZE);
     std::string questionMsg = std::string("\n\nQuiz - ") + ((player.quizTheme == 1) ? "Curiosita sulla tecnologia" : "Cultura Generale") + "\n++++++++++++++++++++++++++++++++++++++++\n" + questions[player.currentQuestion].question + "\n";
 
+    if (!secureSend(socket, questionMsg)) {
+        logMessage("Error sending question to player " + player.nombre);
+    }
+
     logMessage("Sent question no." + std::to_string(player.currentQuestion) + " to player " + player.nombre);
-    send(socket, questionMsg.c_str(), questionMsg.length(), 0);
+    logMessage("Q: " + questions[player.currentQuestion].question);
+    logMessage("A: " + questions[player.currentQuestion].answer);
 
-    bytes_read = read(socket, buffer, BUFFER_SIZE);
-    logMessage("Answer received from player " + player.nombre + "is: " + buffer);
-
-    if (bytes_read <= 0) {
-      logMessage("Error reading answer from player " + player.nombre);
-      break;
+    auto [success, answer] = secureRead(socket, BUFFER_SIZE);
+    if (!success) {
+        logMessage("Error reading answer from player " + player.nombre);
+        break;
     }
 
-    if (buffer[bytes_read - 1] == '\n') {
-      buffer[bytes_read - 1] = '\0';
-    } else {
-      buffer[bytes_read] = '\0';
+    if (!answer.empty() && answer.back() == '\n') {
+        answer.pop_back();
     }
 
-    std::string answer(buffer);
+    logMessage("Answer received from player " + player.nombre + " is: " + answer);
 
     if (answer == "show score") {
       logMessage("Player " + player.nombre + " requested scoreboard.");
@@ -256,7 +309,9 @@ void handleQuiz(int socket) {
 
     if (answer == "endquiz") {
       std::string msg = "Quiz terminato.\n";
-      send(socket, msg.c_str(), msg.length(), 0);
+    if (!secureSend(socket, msg)) {
+        logMessage("Error sending quiz ended message to player " + player.nombre);
+    }
       player.quizTheme = 0;
       logMessage("Player " + player.nombre + " ended the quiz.");
       return;
@@ -264,7 +319,9 @@ void handleQuiz(int socket) {
 
     bool correct = (answer == questions[player.currentQuestion].answer);
     std::string resultMsg = correct ? "Risposta corretta!\n" : "Risposta sbagliata.\n";
-    send(socket, resultMsg.c_str(), resultMsg.length(), 0);
+    if (!secureSend(socket, resultMsg)) {
+        logMessage("Error sending answer result to player " + player.nombre);
+    }
     logMessage("Player " + player.nombre + " answered question " + std::to_string(player.currentQuestion) + " with " + answer + ". Correct: " + std::to_string(correct));
 
     if (correct) score++;
@@ -275,7 +332,9 @@ void handleQuiz(int socket) {
   player.quizTheme = 0;
 
   std::string finalMsg = "Quiz completato! Punteggio finale: " + std::to_string(score) + "/5\n";
-  send(socket, finalMsg.c_str(), finalMsg.length(), 0);
+if (!secureSend(socket, finalMsg)) {
+    logMessage("Error sending final score to player " + player.nombre);
+}
   logMessage("Player " + player.nombre + " completed the quiz with score: " + std::to_string(score));
 }
 

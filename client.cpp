@@ -58,6 +58,21 @@ class TriviaClient {
     std::string nickname;
     bool isConnected;
 
+    bool secureSend(const std::string& message) {
+        ssize_t bytes_sent = 0;
+        while (bytes_sent <= 0) {
+            bytes_sent = send(sock, message.c_str(), message.length(), 0);
+            if (bytes_sent < 0) {
+                logMessage("Error in send operation");
+                return false;
+            }
+        }
+        logMessage("Successfully sent " + std::to_string(bytes_sent) + " bytes: " + message);
+        memset(buffer, 0, BUFFER_SIZE);
+        logMessage("Buffer cleared after send");
+        return true;
+    }
+
     void handleServerDisconnect() {
         std::cout << "\nIl server si è disconnesso. Il quiz è terminato.\n";
         logMessage("Il server si è disconnesso. Il quiz è terminato.");
@@ -102,9 +117,7 @@ class TriviaClient {
 
             if (!isConnected) return false;
 
-            ssize_t sent = send(sock, input.c_str(), input.length(), 0);
-            logMessage("Sent: " + input);
-            if (sent <= 0) {
+            if (!secureSend(input)) {
                 handleServerDisconnect();
                 return false;
             }
@@ -126,7 +139,6 @@ class TriviaClient {
     }
 
     void playQuiz() {
-        memset(buffer, 0, BUFFER_SIZE);
         std::string input;
         sTheme();
         std::getline(std::cin, input);
@@ -134,12 +146,11 @@ class TriviaClient {
 
         if (input != "1" && input != "2") return;
 
-        if (send(sock, input.c_str(), input.length(), 0) <= 0) {
+        if (!secureSend(input)) {
             logMessage("Errore nell'invio del tema");
             handleServerDisconnect();
             return;
         }
-        logMessage("Sent theme: " + input);
 
         while (isConnected) {
             ssize_t bytes_read = read(sock, buffer, BUFFER_SIZE);
@@ -151,8 +162,7 @@ class TriviaClient {
             buffer[bytes_read] = '\0';
             std::string message(buffer);
 
-            if (message.find("completato") != std::string::npos ||
-                message.find("già completato") != std::string::npos) {
+            if (message.find("completato") != std::string::npos || message.find("già completato") != std::string::npos) {
                 std::cout << message;
                 logMessage("Quiz completato");
                 sleep(3);
@@ -165,7 +175,7 @@ class TriviaClient {
             logMessage("Answer: " + input);
 
             if (input == "endquiz" || input == "show score") {
-                if (send(sock, input.c_str(), input.length(), 0) <= 0) {
+                if (!secureSend(input)) {
                     logMessage("Errore nell'invio del comando");
                     handleServerDisconnect();
                     break;
@@ -183,11 +193,20 @@ class TriviaClient {
                 continue;
             }
 
-            if (send(sock, input.c_str(), input.length(), 0) <= 0) {
+            if (!secureSend(input)) {
                 logMessage("Errore nell'invio della risposta");
                 handleServerDisconnect();
                 break;
             }
+
+            bytes_read = read(sock, buffer, BUFFER_SIZE);
+            if (bytes_read <= 0) {
+                handleServerDisconnect();
+                break;
+            }
+            std::string qStatus(buffer);
+            std::cout << qStatus;
+            logMessage("Received question status: " + qStatus);
         }
     }
 
