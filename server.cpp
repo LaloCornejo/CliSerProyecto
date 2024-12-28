@@ -46,6 +46,7 @@ bool secureSend(int sock, const std::string &message) {
         }
         total_sent += bytes_sent;
     }
+    logMessage("Successfully sent total " + std::to_string(total_sent) + " bytes to socket " + std::to_string(sock));
     return true;
 }
 
@@ -66,12 +67,14 @@ std::pair<bool, std::string> secureRead(int sock, size_t maxSize) {
             logMessage("Error in read operation from socket " + std::to_string(sock));
             return {false, ""};
         } else if (bytes_read == 0) {
+            logMessage("Connection closed by peer on socket " + std::to_string(sock));
             if (result.empty()) {
                 return {false, ""};
             }
             break;
         }
         
+        logMessage("Received " + std::to_string(bytes_read) + " bytes from socket " + std::to_string(sock));
         result.append(buffer.data(), bytes_read);
         if (bytes_read < static_cast<ssize_t>(maxSize) || 
             result.length() >= maxSize) {
@@ -123,51 +126,54 @@ void moveCursor(int x, int y) {
 }
 
 void printScoreboard() {
-  system("clear");
-  printf("\t\033[1;36m==- Trivia Quiz -==\033[0m\n"
-    "++++++++++++++++++++++++++++++++++++++++\n");
+std::stringstream ss;
 
-  printf("Temi disponibili:\n");
-  printf("1- Curiosita sulla tecnologia\n");
-  printf("2- Cultura Generale\n"
-    "+++++++++++++++++++++++++++++++++++++++\n");
+ss << "\033[2J\033[H";
 
-  std::lock_guard < std::mutex > lock(playersMutex);
+ss << "\t\033[1;36m    ==- Trivia Quiz -==\033[0m\n"
+    << "++++++++++++++++++++++++++++++++++++++++\n"
+    << "Temi disponibili:\n"
+    << "1- Curiosita sulla tecnologia\n"
+    << "2- Cultura Generale\n"
+    << "+++++++++++++++++++++++++++++++++++++++\n";
 
-  printf("Partecipanti attivi (%zu):\n", players.size());
-  for (const auto &player: players) {
-    printf("• %s (Quiz: %d)\n", player.second.nombre.c_str(), player.second.quizTheme);
-  }
+std::lock_guard<std::mutex> lock(playersMutex);
 
-  printf("\nPunteggi Tecnologia:\n");
-  for (const auto &player: players) {
+ss << "Partecipanti attivi (" << players.size() << "):\n";
+for (const auto &player: players) {
+    ss << "• " << player.second.nombre << " (Quiz: " << player.second.quizTheme << ")\n";
+}
+
+ss << "\nPunteggi Tecnologia:\n";
+for (const auto &player: players) {
     if (player.second.techScore > 0) {
-      printf("%s: %d/5\n", player.second.nombre.c_str(), player.second.techScore);
+    ss << player.second.nombre << ": " << player.second.techScore << "/5\n";
     }
-  }
+}
 
-  printf("\nPunteggi Cultura Generale:\n");
-  for (const auto &player: players) {
+ss << "\nPunteggi Cultura Generale:\n";
+for (const auto &player: players) {
     if (player.second.generalScore > 0) {
-      printf("%s: %d/5\n", player.second.nombre.c_str(), player.second.generalScore);
+    ss << player.second.nombre << ": " << player.second.generalScore << "/5\n";
     }
-  }
+}
 
-  printf("\nQuiz Tecnologia completati:\n");
-  for (const auto &player: players) {
+ss << "\nQuiz Tecnologia completati:\n";
+for (const auto &player: players) {
     if (player.second.hasCompletedTech) {
-      printf("• %s\n", player.second.nombre.c_str());
+    ss << "• " << player.second.nombre << "\n";
     }
-  }
+}
 
-  printf("\nQuiz Cultura Generale completati:\n");
-  for (const auto &player: players) {
+ss << "\nQuiz Cultura Generale completati:\n";
+for (const auto &player: players) {
     if (player.second.hasCompletedGeneral) {
-      printf("• %s\n", player.second.nombre.c_str());
+    ss << "• " << player.second.nombre << "\n";
     }
-  }
+}
 
-  fflush(stdout);
+printf("%s", ss.str().c_str());
+fflush(stdout);
 }
 
 void sendScoreboard(int socket) {
@@ -322,7 +328,7 @@ void handleQuiz(int socket) {
     if (!secureSend(socket, resultMsg)) {
         logMessage("Error sending answer result to player " + player.nombre);
     }
-    logMessage("Player " + player.nombre + " answered question " + std::to_string(player.currentQuestion) + " with " + answer + ". Correct: " + std::to_string(correct));
+    logMessage("Player: " + player.nombre + "responded " + (correct ? "correctly" : "incorrectly") + " to question no." + std::to_string(player.currentQuestion));
 
     if (correct) score++;
     player.currentQuestion++;
@@ -417,7 +423,8 @@ int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
         // Set client socket to non-blocking
         fcntl(newSocket, F_SETFL, O_NONBLOCK);
         clientSockets.push_back(newSocket);
-        logMessage("New connection accepted.");
+        logMessage("New connection accepted on socket " + std::to_string(newSocket) + " from " + 
+                inet_ntoa(clientAddr.sin_addr) + ":" + std::to_string(ntohs(clientAddr.sin_port)));
       }
     }
 
@@ -434,10 +441,13 @@ int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
 
       /*Check if socket is still valid*/
       if (send(sock, "", 0, MSG_NOSIGNAL) < 0) {
+        std::string playerInfo = players.find(sock) != players.end() ? 
+                                " (player: " + players[sock].nombre + ")" : "";
+        logMessage("Closing connection on socket " + std::to_string(sock) + playerInfo);
         close(sock);
         players.erase(sock);
         it = clientSockets.erase(it);
-        logMessage("Connection closed for socket: " + std::to_string(sock));
+        logMessage("Connection cleanup completed for socket: " + std::to_string(sock));
       } else {
         ++it;
       }

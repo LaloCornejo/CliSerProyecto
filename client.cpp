@@ -59,18 +59,52 @@ class TriviaClient {
     bool isConnected;
 
     bool secureSend(const std::string& message) {
-        ssize_t bytes_sent = 0;
-        while (bytes_sent <= 0) {
-            bytes_sent = send(sock, message.c_str(), message.length(), 0);
+        size_t total_sent = 0;
+        size_t len = message.length();
+        
+        while (total_sent < len) {
+            ssize_t bytes_sent = send(sock, message.c_str() + total_sent, len - total_sent, 0);
             if (bytes_sent < 0) {
-                logMessage("Error in send operation");
+                logMessage("Error in send operation: " + std::string(strerror(errno)));
                 return false;
             }
+            total_sent += bytes_sent;
         }
-        logMessage("Successfully sent " + std::to_string(bytes_sent) + " bytes: " + message);
+        
+        logMessage("Successfully sent " + std::to_string(total_sent) + " bytes: " + message);
         memset(buffer, 0, BUFFER_SIZE);
-        logMessage("Buffer cleared after send");
         return true;
+    }
+
+    bool secureReceive() {
+        ssize_t total_read = 0;
+        memset(buffer, 0, BUFFER_SIZE);
+        
+        while (total_read < BUFFER_SIZE - 1) {
+            ssize_t bytes_read = read(sock, buffer + total_read, BUFFER_SIZE - 1 - total_read);
+            if (bytes_read < 0) {
+                logMessage("Error in receive operation: " + std::string(strerror(errno)));
+                return false;
+            }
+            if (bytes_read == 0) {
+                if (total_read == 0) {
+                    logMessage("Connection closed by server");
+                    return false;
+                }
+                break;
+            }
+            total_read += bytes_read;
+            if (buffer[total_read - 1] == '\n' || strchr(buffer, '\0') != nullptr) {
+                break;
+            }
+        }
+        
+        if (total_read > 0) {
+            buffer[total_read] = '\0';
+            logMessage("Received " + std::to_string(total_read) + " bytes from server");
+            return true;
+        }
+        return false;
     }
 
     void handleServerDisconnect() {
@@ -85,9 +119,10 @@ class TriviaClient {
         sock = socket(AF_INET, SOCK_STREAM, 0);
         if (sock < 0) {
             std::cerr << "Errore nella creazione del socket\n";
-            logMessage("Errore nella creazione del socket");
+            logMessage("Errore nella creazione del socket: " + std::string(strerror(errno)));
             return false;
         }
+        logMessage("Socket created successfully");
 
         servAddr.sin_family = AF_INET;
         servAddr.sin_port = htons(port);
@@ -98,12 +133,14 @@ class TriviaClient {
             return false;
         }
 
+        logMessage("Attempting to connect to server at 127.0.0.1:" + std::to_string(port));
         if (connect(sock, (struct sockaddr*)&servAddr, sizeof(servAddr)) < 0) {
             std::cerr << "Connessione fallita\n";
-            logMessage("Connessione fallita");
+            logMessage("Connessione fallita: " + std::string(strerror(errno)));
             return false;
         }
 
+        logMessage("Successfully connected to server");
         isConnected = true;
         return true;
     }
@@ -122,8 +159,7 @@ class TriviaClient {
                 return false;
             }
 
-            ssize_t bytes_read = read(sock, buffer, BUFFER_SIZE);
-            if (bytes_read <= 0) {
+            if (!secureReceive()) {
                 handleServerDisconnect();
                 return false;
             }
@@ -153,13 +189,10 @@ class TriviaClient {
         }
 
         while (isConnected) {
-            ssize_t bytes_read = read(sock, buffer, BUFFER_SIZE);
-            if (bytes_read <= 0) {
+            if (!secureReceive()) {
                 handleServerDisconnect();
                 break;
             }
-
-            buffer[bytes_read] = '\0';
             std::string message(buffer);
 
             if (message.find("completato") != std::string::npos || message.find("già completato") != std::string::npos) {
@@ -182,9 +215,7 @@ class TriviaClient {
                 }
 
                 if (input == "endquiz") {
-                    bytes_read = read(sock, buffer, BUFFER_SIZE);
-                    if (bytes_read > 0) {
-                        buffer[bytes_read] = '\0';
+                    if (secureReceive()) {
                         std::cout << buffer;
                     }
                     break;
@@ -199,14 +230,17 @@ class TriviaClient {
                 break;
             }
 
-            bytes_read = read(sock, buffer, BUFFER_SIZE);
-            if (bytes_read <= 0) {
+            if (!secureReceive()) {
+                logMessage("Error in receiving question status");
                 handleServerDisconnect();
                 break;
             }
             std::string qStatus(buffer);
-            std::cout << qStatus;
+            printf("\033[2J\033[H");
+            printf("\n******************************\n    %s\n******************************\n", qStatus.c_str());
             logMessage("Received question status: " + qStatus);
+            sleep(2);
+            printf("\033[2J\033[H");
         }
     }
 
