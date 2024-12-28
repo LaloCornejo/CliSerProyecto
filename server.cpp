@@ -26,12 +26,12 @@
 std::ofstream logFile("server_log.txt", std::ios::app);
 std::mutex playersMutex;
 
-void logMessage(const std::string & message) {
+void logMessage(const std::string &message) {
   std::lock_guard < std::mutex > lock(playersMutex);
   logFile << "[" << std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()) << "] " << message << std::endl;
 }
 
-bool secureSend(int sock, const std::string& message) {
+bool secureSend(int sock, const std::string &message) {
     size_t total_sent = 0;
     size_t len = message.length();
     
@@ -101,7 +101,7 @@ std::vector < qQuestion > techQuestions;
 std::vector < qQuestion > generalQuestions;
 std::map < int, Player > players;
 
-std::vector < qQuestion > loadQuestions(const std::string & filename) {
+std::vector < qQuestion > loadQuestions(const std::string &filename) {
   std::vector < qQuestion > questions;
   std::ifstream file(filename);
   std::string line;
@@ -135,33 +135,33 @@ void printScoreboard() {
   std::lock_guard < std::mutex > lock(playersMutex);
 
   printf("Partecipanti attivi (%zu):\n", players.size());
-  for (const auto & player: players) {
+  for (const auto &player: players) {
     printf("• %s (Quiz: %d)\n", player.second.nombre.c_str(), player.second.quizTheme);
   }
 
   printf("\nPunteggi Tecnologia:\n");
-  for (const auto & player: players) {
+  for (const auto &player: players) {
     if (player.second.techScore > 0) {
       printf("%s: %d/5\n", player.second.nombre.c_str(), player.second.techScore);
     }
   }
 
   printf("\nPunteggi Cultura Generale:\n");
-  for (const auto & player: players) {
+  for (const auto &player: players) {
     if (player.second.generalScore > 0) {
       printf("%s: %d/5\n", player.second.nombre.c_str(), player.second.generalScore);
     }
   }
 
   printf("\nQuiz Tecnologia completati:\n");
-  for (const auto & player: players) {
+  for (const auto &player: players) {
     if (player.second.hasCompletedTech) {
       printf("• %s\n", player.second.nombre.c_str());
     }
   }
 
   printf("\nQuiz Cultura Generale completati:\n");
-  for (const auto & player: players) {
+  for (const auto &player: players) {
     if (player.second.hasCompletedGeneral) {
       printf("• %s\n", player.second.nombre.c_str());
     }
@@ -175,14 +175,14 @@ void sendScoreboard(int socket) {
   std::lock_guard < std::mutex > lock(playersMutex);
 
   ss << "\nPunteggi Tecnologia:\n";
-  for (const auto & player: players) {
+  for (const auto &player: players) {
     if (player.second.techScore > 0) {
       ss << player.second.nombre << ": " << player.second.techScore << "/5\n";
     }
   }
 
   ss << "\nPunteggi Cultura Generale:\n";
-  for (const auto & player: players) {
+  for (const auto &player: players) {
     if (player.second.generalScore > 0) {
       ss << player.second.nombre << ": " << player.second.generalScore << "/5\n";
     }
@@ -261,10 +261,10 @@ void handleQuiz(int socket) {
   char theme = themeStr[0];
   logMessage("Player " + players[socket].nombre + " selected quiz theme: " + theme);
 
-  auto & player = players[socket];
-  bool & completed = (theme == '1') ? player.hasCompletedTech : player.hasCompletedGeneral;
-  int & score = (theme == '1') ? player.techScore : player.generalScore;
-  auto & questions = (theme == '1') ? techQuestions : generalQuestions;
+  auto &player = players[socket];
+  bool &completed = (theme == '1') ? player.hasCompletedTech : player.hasCompletedGeneral;
+  int &score = (theme == '1') ? player.techScore : player.generalScore;
+  auto &questions = (theme == '1') ? techQuestions : generalQuestions;
 
   if (completed) {
     std::string msg = "Hai gia completato questo quiz!\n";
@@ -353,7 +353,7 @@ int main() {
     techQuestions = loadQuestions(techFile);
     generalQuestions = loadQuestions(generalFile);
     logMessage("Questions loaded successfully.");
-  } catch (const std::exception & e) {
+  } catch (const std::exception &e) {
     std::cerr << "Error loading questions: " << e.what() << std::endl;
     logMessage("Error loading questions: " + std::string(e.what()));
     return 1;
