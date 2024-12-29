@@ -1,166 +1,83 @@
-[1735416620] Scelta: 1
-[1735416620] Socket created successfully
-[1735416620] Attempting to connect to server at 127.0.0.1:1234
-[1735416620] Successfully connected to server
-[1735416623] Nickname scelto: Lalo
-[1735416623] Successfully sent 4 bytes: Lalo
-[1735416623] Received 1 bytes from server
-[1735416634] Tema scelto: 1
-[1735416634] Successfully sent 1 bytes: 1
-[1735416634] Received 100 bytes from server
-[1735416634] Received question: 
+[1735431715] Scelta: 1
+[1735431715] Socket created successfully
+[1735431715] Attempting to connect to server at 127.0.0.1:1234
+[1735431715] Successfully connected to server
+[1735431717] Nickname scelto: Lalo
+[1735431717] Successfully sent 4 bytes: Lalo
+[1735431717] Received 1 bytes from server
+[1735431721] Tema scelto: 1
+[1735431721] Successfully sent 1 bytes: 1
+[1735431721] Received 100 bytes from server
+[1735431721] Received question: 
 
 Quiz - Curiosita sulla tecnologia
 ++++++++++++++++++++++++++++++++++++++++
 Who founded Microsoft?
 
-[1735416642] Answer: hfdaskfads
-[1735416642] Successfully sent 10 bytes: hfdaskfads
-[1735416642] Received 20 bytes from server
-[1735416642] Received question status: Risposta sbagliata.
+[1735431726] Answer: Bill Gates
+[1735431726] Successfully sent 10 bytes: Bill Gates
+[1735431726] Received 19 bytes from server
+[1735431726] Received question status: Risposta corretta!
 
-[1735416644] Received 150 bytes from server
-[1735416644] Received question: 
-
-Quiz - Curiosita sulla tecnologia
-++++++++++++++++++++++++++++++++++++++++
-Which company introduced the first commercial personal computer in 1981?
-
-[1735416650] Answer: fhasdjfasdkjhfasd
-[1735416650] Successfully sent 17 bytes: fhasdjfasdkjhfasd
-[1735416650] Received 20 bytes from server
-[1735416650] Received question status: Risposta sbagliata.
-
-[1735416652] Received 110 bytes from server
-[1735416652] Received question: 
-
-Quiz - Curiosita sulla tecnologia
-++++++++++++++++++++++++++++++++++++++++
-Who invented the World Wide Web?
-
-[1735416657] Answer: hjklfasdhjklaf
-[1735416657] Successfully sent 14 bytes: hjklfasdhjklaf
-[1735416657] Received 20 bytes from server
-[1735416657] Received question status: Risposta sbagliata.
-
-[1735416659] Received 102 bytes from server
-[1735416659] Received question: 
-
-Quiz - Curiosita sulla tecnologia
-++++++++++++++++++++++++++++++++++++++++
-What does CPU stand for?
-
-[1735416666] Answer: hjklgsdfgnvjksd
-[1735416666] Successfully sent 15 bytes: hjklgsdfgnvjksd
-[1735416666] Received 20 bytes from server
-[1735416666] Received question status: Risposta sbagliata.
-
-[1735416668] Received 136 bytes from server
-[1735416668] Received question: 
-
-Quiz - Curiosita sulla tecnologia
-++++++++++++++++++++++++++++++++++++++++
-What programming language was created by Guido van Rossum?
-
-[1735416672] Answer: hljkgsdfhlkjgsdf
-[1735416672] Successfully sent 16 bytes: hljkgsdfhlkjgsdf
-[1735416672] Received 20 bytes from server
-[1735416672] Received question status: Risposta sbagliata.
-
-[1735416674] Received 111 bytes from server
-[1735416674] Received question: 
-
-Quiz - Curiosita sulla tecnologia
-++++++++++++++++++++++++++++++++++++++++
-En que lago me ganaab de la caca?
-
-[1735416679] Answer: gsdfhjlkgsfdggsdf
-[1735416679] Successfully sent 17 bytes: gsdfhjlkgsfdggsdf
-[1735416679] Received 20 bytes from server
-[1735416679] Received question status: Risposta sbagliata.
-
-[1735416681] Received 39 bytes from server
-[1735416681] Quiz completato
-[1735429776] Scelta: 1
-[1735429776] Socket created successfully
-[1735429776] Attempting to connect to server at 127.0.0.1:1234
-[1735429776] Successfully connected to server
-[1735429779] Nickname scelto: Lalo
-[1735429779] Successfully sent 4 bytes: Lalo
-[1735429779] Received 1 bytes from server
-[1735429781] Tema scelto: 1
-[1735429781] Successfully sent 1 bytes: 1
-[1735429781] Received 100 bytes from server
-[1735429781] Received question: 
-
-Quiz - Curiosita sulla tecnologia
-++++++++++++++++++++++++++++++++++++++++
-Who founded Microsoft?
-
-[1735429786] Answer: dladsfgg
-[1735429786] Successfully sent 8 bytes: dladsfgg
-[1735429786] Received 20 bytes from server
-[1735429786] Received question status: Risposta sbagliata.
-
-[1735429788] Received 150 bytes from server
-[1735429788] Received question: 
+[1735431728] Received 150 bytes from server
+[1735431728] Received question: 
 
 Quiz - Curiosita sulla tecnologia
 ++++++++++++++++++++++++++++++++++++++++
 Which company introduced the first commercial personal computer in 1981?
 
-[1735429793] Answer: fasdhjklasdfklfa
-[1735429793] Successfully sent 16 bytes: fasdhjklasdfklfa
-[1735429793] Received 20 bytes from server
-[1735429793] Received question status: Risposta sbagliata.
+[1735431732] Answer: IBM
+[1735431732] Successfully sent 3 bytes: IBM
+[1735431732] Received 19 bytes from server
+[1735431732] Received question status: Risposta corretta!
 
-[1735429795] Received 110 bytes from server
-[1735429795] Received question: 
+[1735431734] Received 110 bytes from server
+[1735431734] Received question: 
 
 Quiz - Curiosita sulla tecnologia
 ++++++++++++++++++++++++++++++++++++++++
 Who invented the World Wide Web?
 
-[1735429799] Answer: gsdfhlkjsdghlk
-[1735429799] Successfully sent 14 bytes: gsdfhlkjsdghlk
-[1735429799] Received 20 bytes from server
-[1735429799] Received question status: Risposta sbagliata.
+[1735431740] Answer: No idea
+[1735431740] Successfully sent 7 bytes: No idea
+[1735431740] Received 20 bytes from server
+[1735431740] Received question status: Risposta sbagliata.
 
-[1735429801] Received 102 bytes from server
-[1735429801] Received question: 
+[1735431742] Received 102 bytes from server
+[1735431742] Received question: 
 
 Quiz - Curiosita sulla tecnologia
 ++++++++++++++++++++++++++++++++++++++++
 What does CPU stand for?
 
-[1735429810] Answer: Central Processing Unit
-[1735429810] Successfully sent 23 bytes: Central Processing Unit
-[1735429810] Received 19 bytes from server
-[1735429810] Received question status: Risposta corretta!
+[1735431749] Answer: Central Processing Unit
+[1735431749] Successfully sent 23 bytes: Central Processing Unit
+[1735431749] Received 19 bytes from server
+[1735431749] Received question status: Risposta corretta!
 
-[1735429812] Received 136 bytes from server
-[1735429812] Received question: 
+[1735431751] Received 136 bytes from server
+[1735431751] Received question: 
 
 Quiz - Curiosita sulla tecnologia
 ++++++++++++++++++++++++++++++++++++++++
 What programming language was created by Guido van Rossum?
 
-[1735429822] Answer: Python
-[1735429822] Successfully sent 6 bytes: Python
-[1735429822] Received 19 bytes from server
-[1735429822] Received question status: Risposta corretta!
+[1735431756] Answer: Python
+[1735431756] Successfully sent 6 bytes: Python
+[1735431756] Received 19 bytes from server
+[1735431756] Received question status: Risposta corretta!
 
-[1735429824] Received 111 bytes from server
-[1735429824] Received question: 
+[1735431758] Received 111 bytes from server
+[1735431758] Received question: 
 
 Quiz - Curiosita sulla tecnologia
 ++++++++++++++++++++++++++++++++++++++++
 En que lago me ganaab de la caca?
 
-[1735429834] Answer: Lago titikaka
-[1735429834] Successfully sent 13 bytes: Lago titikaka
-[1735429834] Received 19 bytes from server
-[1735429834] Received question status: Risposta corretta!
+[1735431764] Answer: Lago titikaka
+[1735431764] Successfully sent 13 bytes: Lago titikaka
+[1735431764] Received 19 bytes from server
+[1735431764] Received question status: Risposta corretta!
 
-[1735429836] Received 39 bytes from server
-[1735429836] Quiz completato
+[1735431766] Received 39 bytes from server
+[1735431766] Quiz completato
