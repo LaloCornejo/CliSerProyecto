@@ -1,124 +1,115 @@
-#include <algorithm>
-#include <arpa/inet.h>
-#include <chrono>
-#include <cstring>
-#include <errno.h>
-#include <fcntl.h>
-#include <fstream>
-#include <iostream>
-#include <map>
-#include <mutex>
-#include <netinet/in.h>
-#include <sstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
-#include <sys/select.h>
-#include <sys/socket.h>
-#include <thread>
 #include <unistd.h>
+#include <arpa/inet.h>
+#include <thread>
+#include <mutex>
+#include <fstream>
 #include <vector>
+#include <sstream>
+#include <chrono>
+#include <errno.h>
 
 #define PORT 1234
-#define BUFFER_SIZE 1024
-#define MAX_CLIENTS 10
+#define MAX_SIZE 1024
+#define MAX_CLIENT 1024
 
-std::ofstream logFile("server_log.txt", std::ios::app);
+std::ofstream logFile("server.log", std::ios::app);
 std::mutex playersMutex;
+std::mutex questionsMutex;
 
-void logMessage(const std::string &message) {
-    std::lock_guard<std::mutex> lock(playersMutex);
-    logFile << "["
-            << std::chrono::system_clock::to_time_t(
-                   std::chrono::system_clock::now())
-            << "] " << message << std::endl;
-}
-
-bool secureSend(int sock, const std::string &message) {
-    size_t total_sent = 0;
-    size_t len = message.length();
-
-    while (total_sent < len) {
-        ssize_t bytes_sent =
-            send(sock, message.c_str() + total_sent, len - total_sent, 0);
-        if (bytes_sent < 0) {
-            if (errno == EWOULDBLOCK || errno == EAGAIN) {
-                continue;
-            }
-            logMessage("Error in send operation to socket " + std::to_string(sock));
-            return false;
-        }
-        total_sent += bytes_sent;
+struct Question {
+    std::string question;
+    std::string answer;
+    bool operator==(const Question& other) const {
+        return question == other.question && answer == other.answer;
     }
-    logMessage("Successfully sent total " + std::to_string(total_sent) +
-               " bytes to socket " + std::to_string(sock));
-    return true;
-}
-
-std::pair<bool, std::string> secureRead(int sock, size_t maxSize) {
-    std::string result;
-    std::vector<char> buffer(maxSize);
-
-    while (true) {
-        ssize_t bytes_read = read(sock, buffer.data(), maxSize - result.length());
-
-        if (bytes_read < 0) {
-            if (errno == EWOULDBLOCK || errno == EAGAIN) {
-                if (result.empty()) {
-                    continue;
-                }
-                break;
-            }
-            logMessage("Error in read operation from socket " + std::to_string(sock));
-            return {false, ""};
-        } else if (bytes_read == 0) {
-            logMessage("Connection closed by peer on socket " + std::to_string(sock));
-            if (result.empty()) {
-                return {false, ""};
-            }
-            break;
-        }
-
-        logMessage("Received " + std::to_string(bytes_read) +
-                   " bytes from socket " + std::to_string(sock));
-        result.append(buffer.data(), bytes_read);
-        if (bytes_read < static_cast<ssize_t>(maxSize) ||
-            result.length() >= maxSize) {
-            break;
-        }
-    }
-
-    return {true, result};
-}
+};
 
 struct Player {
     std::string nombre;
+    int currentT;
+    int currentQ;
     int techScore;
     int generalScore;
     bool hasCompletedTech;
     bool hasCompletedGeneral;
-    int quizTheme;
-    int currentQuestion;
 };
 
-struct qQuestion {
-    std::string question;
-    std::string answer;
-};
+std::vector<Question> techQuestions;
+std::vector<Question> generalQuestions;
+std::vector<std::pair<int, Player>> players;
 
-std::vector<qQuestion> techQuestions;
-std::vector<qQuestion> generalQuestions;
-std::map<int, Player> players;
+// Forward declarations
+void playTrivia(int socket);
+void handleNewPlayer(int socket);
+void printScoreboard();
+void sendScoreboard(int socket);
+std::vector<Question> handleThemeSelection(int socket);
 
-std::vector<qQuestion> loadQuestions(const std::string &filename) {
-    std::vector<qQuestion> questions;
+std::pair<int, Player>& find_player_by_socket(int socket) {
+    auto it = std::find_if(players.begin(), players.end(),
+        [socket](const std::pair<int, Player>& p) { return p.first == socket; });
+    return *it;
+}
+
+void logMessage(const std::string &message) {
+    std::lock_guard<std::mutex> lock(playersMutex);
+    auto now = std::chrono::system_clock::now();
+    logFile << "[" << std::chrono::system_clock::to_time_t(now) << "] " 
+            << message << std::endl;
+}
+
+bool secureSend(int socket, const std::string &message) {
+    size_t totalSent = 0;
+    size_t messageLength = message.length();
+
+    while (totalSent < messageLength) {
+        ssize_t sent = send(socket, message.c_str() + totalSent,
+                          messageLength - totalSent, 0);
+        if (sent == -1) {
+            if (errno == EWOULDBLOCK || errno == EAGAIN) {
+                continue;
+            }
+            logMessage("Error sending message to client");
+            return false;
+        }
+        totalSent += sent;
+    }
+    logMessage("Successfully sent total of " + std::to_string(totalSent) + 
+               " bytes to client");
+    return true;  
+}
+
+bool secureReceive(int socket, std::string &message) {
+    char buffer[MAX_SIZE] = {0};  
+    ssize_t bytesRead = recv(socket, buffer, MAX_SIZE - 1, 0);  
+
+    if (bytesRead <= 0) {  
+        logMessage("Client disconnected or error receiving message");
+        return false;
+    }
+
+    message = std::string(buffer, bytesRead);
+    logMessage("Received " + std::to_string(bytesRead) + " bytes from client: " + message);
+    return true;
+}
+
+std::vector<Question> loadQuestions(const std::string &filename) {
+    std::lock_guard<std::mutex> lock(questionsMutex);
+    std::vector<Question> questions;
     std::ifstream file(filename);
+    
+    if (!file.is_open()) {
+        throw std::runtime_error("Unable to open file: " + filename);
+    }
+    
     std::string line;
-
     while (std::getline(file, line)) {
         size_t delimiterPos = line.find('|');
         if (delimiterPos != std::string::npos) {
-            qQuestion question;
+            Question question;
             question.question = line.substr(0, delimiterPos);
             question.answer = line.substr(delimiterPos + 1);
             questions.push_back(question);
@@ -127,329 +118,326 @@ std::vector<qQuestion> loadQuestions(const std::string &filename) {
     return questions;
 }
 
-void moveCursor(int x, int y) { printf("\033[%d;%dH", x, y); }
+void playTrivia(int socket) {
+    auto& player_pair = find_player_by_socket(socket);
+    auto& player = player_pair.second;
+    std::vector<Question> questions = handleThemeSelection(socket);
 
-void printScoreboard() {
-    std::stringstream ss;
-
-    ss << "\033[2J\033[H";
-
-    ss << "\t\033[1;36m    ==- Trivia Quiz -==\033[0m\n"
-       << "++++++++++++++++++++++++++++++++++++++++\n"
-       << "Temi disponibili:\n"
-       << "1- Curiosita sulla tecnologia\n"
-       << "2- Cultura Generale\n"
-       << "+++++++++++++++++++++++++++++++++++++++\n";
-
-    std::lock_guard<std::mutex> lock(playersMutex);
-
-    ss << "Partecipanti attivi (" << players.size() << "):\n";
-    for (const auto &player : players) {
-        ss << "• " << player.second.nombre << " (Quiz: " << player.second.quizTheme
-           << ")\n";
+    if (questions.empty()) {
+        return;
     }
 
-    ss << "\nPunteggi Tecnologia:\n";
-    for (const auto &player : players) {
-        if (player.second.techScore > 0) {
-            ss << player.second.nombre << ": " << player.second.techScore << "/5\n";
+    while (player.currentQ < questions.size()) {
+      if (!secureSend(socket, questions[player.currentQ].question)) {
+        logMessage("Error sending message to client");
+        perror("Error sending message to client");
+        return;
+      }
+
+    logMessage("Sent question no. " + std::to_string(player.currentQ) + 
+            " to player " + player.nombre);
+    logMessage("Q: " + questions[player.currentQ].question);
+    logMessage("A: " + questions[player.currentQ].answer);
+
+      std::string answer;
+      if (!secureReceive(socket, answer)) {
+        logMessage("Error receiving answer from client");
+        perror("Error receiving answer from client");
+        return;
+      }
+
+    logMessage("Received answer from player " + player.nombre + ": " + answer);
+
+      if (answer.empty() && answer.back() == '\n') {
+        answer.pop_back();
+      }
+
+      if (answer == "show score" || answer == "endquiz") {
+        if (answer == "show score") {
+          logMessage("Player " + player.nombre + " requested scoreboard.");
+          sendScoreboard(socket);
+          continue;
         }
-    }
 
-    ss << "\nPunteggi Cultura Generale:\n";
-    for (const auto &player : players) {
-        if (player.second.generalScore > 0) {
-            ss << player.second.nombre << ": " << player.second.generalScore
-               << "/5\n";
+        if (answer == "endquiz") {
+          std::string msg = "Quiz terminato.\n";
+          if (!secureSend(socket, msg)) {
+            logMessage("Error sending quiz ended message to player " +
+                       player.nombre);
+          }
+          break;
         }
-    }
+      }
 
-    ss << "\nQuiz Tecnologia completati:\n";
-    for (const auto &player : players) {
-        if (player.second.hasCompletedTech) {
-            ss << "• " << player.second.nombre << "\n";
+      if (answer == questions[player.currentQ].answer) {
+        if (!secureSend(socket, "1")) {
+          logMessage("Error sending message to client");
+          perror("Error sending message to client");
+          return;
         }
-    }
-
-    ss << "\nQuiz Cultura Generale completati:\n";
-    for (const auto &player : players) {
-        if (player.second.hasCompletedGeneral) {
-            ss << "• " << player.second.nombre << "\n";
+        if (questions == techQuestions) {
+          player.techScore++;
+        } else {
+          player.generalScore++;
         }
+      } else {
+        if (!secureSend(socket, "0")) {
+          logMessage("Error sending message to client");
+          perror("Error sending message to client");
+          return;
+        }
+      }
+      player.currentQ++;
     }
+}
 
-    printf("%s", ss.str().c_str());
-    fflush(stdout);
+void run(int socket) {
+    try {
+        techQuestions = loadQuestions("tech.txt");
+        generalQuestions = loadQuestions("general.txt");
+        logMessage("Loaded questions");
+        
+        handleNewPlayer(socket);
+        
+        
+        auto it = std::find_if(players.begin(), players.end(),
+                            [socket](const std::pair<int, Player> &p) { return p.first == socket; });
+        if (it == players.end()) {
+            logMessage("Player not found for socket: " + std::to_string(socket));
+            return;
+        }
+        
+        Player &player = it->second;
+        bool bothThemesCompleted = player.hasCompletedTech && 
+                                 player.hasCompletedGeneral;
+
+        while (!bothThemesCompleted) {
+            handleThemeSelection(socket);
+            bothThemesCompleted = player.hasCompletedTech && 
+                                player.hasCompletedGeneral;
+        }
+    } catch (const std::exception &e) {
+        logMessage("Error in run: " + std::string(e.what()));
+    }
 }
 
 void sendScoreboard(int socket) {
     std::stringstream ss;
+    ss << "\nScoreboard:\n";
+    ss << "Technology Quiz Scores:\n";
+    
     std::lock_guard<std::mutex> lock(playersMutex);
-
-    ss << "\nPunteggi Tecnologia:\n";
-    for (const auto &player : players) {
-        if (player.second.techScore > 0) {
-            ss << player.second.nombre << ": " << player.second.techScore << "/5\n";
+    for (const auto& player_pair : players) {
+        const auto& player = player_pair.second;
+        if (player.techScore > 0) {
+            ss << player.nombre << ": " << player.techScore << "/" 
+            << techQuestions.size() << "\n";
         }
     }
-
-    ss << "\nPunteggi Cultura Generale:\n";
-    for (const auto &player : players) {
-        if (player.second.generalScore > 0) {
-            ss << player.second.nombre << ": " << player.second.generalScore
-               << "/5\n";
+    
+    ss << "\nGeneral Knowledge Scores:\n";
+    for (const auto& player_pair : players) {
+        const auto& player = player_pair.second;
+        if (player.generalScore > 0) {
+            ss << player.nombre << ": " << player.generalScore << "/" 
+            << generalQuestions.size() << "\n";
         }
     }
-
-    std::string scoreboardStr = ss.str();
-    logMessage("Sending scoreboard to player " + std::to_string(socket));
-    if (!secureSend(socket, scoreboardStr)) {
-        logMessage("Error sending scoreboard to player " + std::to_string(socket));
-    }
+    
+    secureSend(socket, ss.str());
 }
 
-bool checkNickname(const std::string &name) {
+void printScoreboard() {
+    std::stringstream ss;
+    ss << "\033[2J\033[H";  // Clear screen and move cursor to top
+   
+   ss << "\t\033[1;36m    ==- Trivia Quiz -==\033[0m\n"
+      << "++++++++++++++++++++++++++++++++++++++++\n"
+      << "Temi disponibili:\n"
+      << "1- Curiosita sulla tecnologia\n"
+      << "2- Cultura Generale\n"
+      << "+++++++++++++++++++++++++++++++++++++++\n";
+    
     std::lock_guard<std::mutex> lock(playersMutex);
-    for (const auto &player : players) {
-        if (player.second.nombre == name) {
-            return false;
+    ss << "Partecipanti attivi (" << players.size() << ")\n";
+    for (const auto& player_pair : players) {
+        const auto& player = player_pair.second;
+        ss << "x " << player.nombre << "\n";
+    }
+    
+    ss << "\nPuntaggi Tecnologia:\n";
+    for (const auto& player_pair : players) {
+        const auto& player = player_pair.second;
+        if (player.techScore >= 0) {
+            ss << "-> " << player.nombre << ": " << player.techScore << "/" 
+            << techQuestions.size() << "\n";
         }
     }
-    return true;
+    
+    ss << "\nPuntaggi Cultura Generale:\n";
+    for (const auto& player_pair : players) {
+        const auto& player = player_pair.second;
+        if (player.generalScore >= 0) {
+            ss << "-> " << player.nombre << ": " << player.generalScore << "/" 
+            << generalQuestions.size() << "\n";
+        }
+    }
+
+    ss << "\nQuiz Tecnologia completati:\n";
+    for (const auto& player_pair : players) {
+        const auto& player = player_pair.second;
+        if (player.hasCompletedTech) {
+            ss << "-> " << player.nombre << "\n";
+        }
+    }
+
+    ss << "\nQuiz Cultura Generale completati:\n";
+    for (const auto& player_pair : players) {
+        const auto& player = player_pair.second;
+        if (player.hasCompletedGeneral) {
+            ss << "-> " << player.nombre << "\n";
+        }
+    }
+
+    ss << "----------------------------------------\n";
+    
+    printf("%s\n", ss.str().c_str());
+    fflush(stdout);
 }
 
 void handleNewPlayer(int socket) {
-    char buffer[BUFFER_SIZE];
-    bool validNickname = false;
-
-    while (!validNickname) {
-        auto [success, nickname] = secureRead(socket, BUFFER_SIZE);
-        if (!success) {
-            close(socket);
-            logMessage("Error reading nickname from new player.");
-            return;
-        }
-
-        if (checkNickname(nickname)) {
-            validNickname = true;
-
-            Player newPlayer;
-            newPlayer.nombre = nickname;
-            newPlayer.techScore = 0;
-            newPlayer.generalScore = 0;
-            newPlayer.hasCompletedTech = false;
-            newPlayer.hasCompletedGeneral = false;
-            newPlayer.quizTheme = 0;
-            newPlayer.currentQuestion = 0;
-
-            {
-                std::lock_guard<std::mutex> lock(playersMutex);
-                players[socket] = newPlayer;
-            }
-
-            if (!secureSend(socket, "1")) {
-                logMessage("Error sending confirmation to new player.");
-            }
-            logMessage("New player joined: " + nickname);
-        } else {
-            if (!secureSend(socket, "0")) {
-                logMessage("Error sending nickname in use message to new player.");
-            }
-            logMessage("Nickname already in use: " + nickname);
-        }
-    }
-}
-
-void handleQuiz(int socket) {
-    auto [success, themeStr] = secureRead(socket, BUFFER_SIZE);
-    if (!success) {
-        logMessage("Error reading quiz theme from player socket: " +
-                   std::to_string(socket));
+    std::string nickname;
+    if (!secureReceive(socket, nickname)) {
+        logMessage("Error receiving nickname");
         return;
     }
 
-    if (!themeStr.empty() && themeStr.back() == '\n') {
-        themeStr.pop_back();
-    }
-
-    char theme = themeStr[0];
-    logMessage("Player " + players[socket].nombre +
-               " selected quiz theme: " + theme);
-
-    auto &player = players[socket];
-    bool &completed =
-        (theme == '1') ? player.hasCompletedTech : player.hasCompletedGeneral;
-    int &score = (theme == '1') ? player.techScore : player.generalScore;
-    auto &questions = (theme == '1') ? techQuestions : generalQuestions;
-
-    if (completed) {
-        std::string msg = "Hai gia completato questo quiz!\n";
-        if (!secureSend(socket, msg)) {
-            logMessage("Error sending quiz completed message to player " +
-                       player.nombre);
-        }
-        logMessage("Player " + player.nombre +
-                   " attempted to retake completed quiz.");
-        return;
-    }
-
-    player.quizTheme = theme - '0';
-    player.currentQuestion = 0;
-
-    while (player.currentQuestion < questions.size()) {
-        std::string questionMsg =
-            std::string("\n\nQuiz - ") +
-            ((player.quizTheme == 1) ? "Curiosita sulla tecnologia"
-                                     : "Cultura Generale") +
-            "\n++++++++++++++++++++++++++++++++++++++++\n" +
-            questions[player.currentQuestion].question + "\n";
-
-        if (!secureSend(socket, questionMsg)) {
-            logMessage("Error sending question to player " + player.nombre);
-        }
-
-        logMessage("Sent question no." + std::to_string(player.currentQuestion) +
-                   " to player " + player.nombre);
-        logMessage("Q: " + questions[player.currentQuestion].question);
-        logMessage("A: " + questions[player.currentQuestion].answer);
-
-        auto [success, answer] = secureRead(socket, BUFFER_SIZE);
-        if (!success) {
-            logMessage("Error reading answer from player " + player.nombre);
-            break;
-        }
-
-        if (!answer.empty() && answer.back() == '\n') {
-            answer.pop_back();
-        }
-
-        logMessage("Answer received from player " + player.nombre +
-                   " is: " + answer);
-
-        if (answer == "show score") {
-            logMessage("Player " + player.nombre + " requested scoreboard.");
-            sendScoreboard(socket);
-            continue;
-        }
-
-        if (answer == "endquiz") {
-            std::string msg = "Quiz terminato.\n";
-            if (!secureSend(socket, msg)) {
-                logMessage("Error sending quiz ended message to player " +
-                           player.nombre);
+    {
+        std::lock_guard<std::mutex> lock(playersMutex);
+        // Check if nickname is already taken
+        for (const auto& player_pair : players) {
+            if (player_pair.second.nombre == nickname) {
+                secureSend(socket, "Nickname already taken");
+                return;
             }
-            player.quizTheme = 0;
-            logMessage("Player " + player.nombre + " ended the quiz.");
-            return;
         }
 
-        bool correct = (answer == questions[player.currentQuestion].answer);
-        std::string resultMsg =
-            correct ? "Risposta corretta!\n" : "Risposta sbagliata.\n";
-        if (!secureSend(socket, resultMsg)) {
-            logMessage("Error sending answer result to player " + player.nombre);
+        // Create new player
+        Player newPlayer;
+        newPlayer.nombre = nickname;
+        newPlayer.currentT = 0;
+        newPlayer.currentQ = 0;
+        newPlayer.techScore = 0;
+        newPlayer.generalScore = 0;
+        newPlayer.hasCompletedTech = false;
+        newPlayer.hasCompletedGeneral = false;
+
+        players.push_back(std::make_pair(socket, newPlayer));
+    }
+
+    secureSend(socket, "Welcome " + nickname);
+    logMessage("New player joined: " + nickname);
+    printScoreboard();
+}
+
+std::vector<Question> handleThemeSelection(int socket) {
+    std::string theme;
+    if (!secureReceive(socket, theme)) {
+        logMessage("Error receiving theme selection");
+        return std::vector<Question>();
+    }
+
+    auto& player_pair = find_player_by_socket(socket);
+    auto& player = player_pair.second;
+
+    if (theme == "1") {  // Technology theme
+        if (player.hasCompletedTech) {
+            secureSend(socket, "You have already completed the technology quiz");
+            return std::vector<Question>();
         }
-        logMessage("Player: " + player.nombre + "responded " +
-                   (correct ? "correctly" : "incorrectly") + " to question no." +
-                   std::to_string(player.currentQuestion));
-
-        if (correct)
-            score++;
-        player.currentQuestion++;
+        return techQuestions;
+    } else if (theme == "2") {  // General knowledge theme
+        if (player.hasCompletedGeneral) {
+            secureSend(socket, "You have already completed the general knowledge quiz");
+            return std::vector<Question>();
+        }
+        return generalQuestions;
     }
 
-    completed = true;
-    player.quizTheme = 0;
-
-    std::string finalMsg =
-        "Quiz completato! Punteggio finale: " + std::to_string(score) + "/5\n";
-    if (!secureSend(socket, finalMsg)) {
-        logMessage("Error sending final score to player " + player.nombre);
-    }
-    logMessage("Player " + player.nombre +
-               " completed the quiz with score: " + std::to_string(score));
-}
-
-void updateScoreboard() {
-    while (true) {
-        printScoreboard();
-        std::this_thread::sleep_for(std::chrono::seconds(2));
-    }
-}
-
-void handleClient(int clientSocket) {
-    handleNewPlayer(clientSocket);
-    handleQuiz(clientSocket);
-
-    close(clientSocket);
-    exit(0);  // Terminate the child process after handling the client
+    secureSend(socket, "Invalid theme selection");
+    return std::vector<Question>();
 }
 
 int main() {
-    std::string techFile = "tech.txt";
-    std::string generalFile = "general.txt";
-
-    try {
-        techQuestions = loadQuestions(techFile);
-        generalQuestions = loadQuestions(generalFile);
-        logMessage("Questions loaded successfully.");
-    } catch (const std::exception &e) {
-        std::cerr << "Error loading questions: " << e.what() << std::endl;
-        logMessage("Error loading questions: " + std::string(e.what()));
-        return 1;
-    }
-
-    std::thread scoreboardThread(updateScoreboard);
-    scoreboardThread.detach();
-
-    int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (serverSocket < 0) {
-        perror("Socket creation failed");
-        logMessage("Socket creation failed.");
-        return 1;
-    }
-
+    logMessage("===== Server started =====");
+    int serverfd;
     struct sockaddr_in serverAddr;
+    int addrLen = sizeof(serverAddr);
+
+    // Socket creation (removed duplicate socket creation)
+    if ((serverfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        perror("Socket creation failed");
+        logMessage("Socket creation failed");
+        exit(EXIT_FAILURE);
+    }
+
+    // Set SO_REUSEADDR option
+    int opt = 1;
+    if (setsockopt(serverfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
+        perror("setsockopt failed");
+        logMessage("setsockopt failed");
+        exit(EXIT_FAILURE);
+    }
+
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_addr.s_addr = INADDR_ANY;
     serverAddr.sin_port = htons(PORT);
 
-    if (bind(serverSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0) {
-        perror("Bind failed");
-        logMessage("Bind failed.");
-        return 1;
+    if (bind(serverfd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0) {
+        perror("Socket bind failed");
+        logMessage("Socket bind failed");
+        exit(EXIT_FAILURE);
     }
 
-    if (listen(serverSocket, MAX_CLIENTS) < 0) {
-        perror("Listen failed");
-        logMessage("Listen failed.");
-        return 1;
+    if (listen(serverfd, MAX_CLIENT) < 0) {
+        perror("Socket listen failed");
+        logMessage("Socket listen failed");
+        exit(EXIT_FAILURE);
     }
+
+    printf("Server listening on port %d\n", PORT);
+    printScoreboard();
 
     while (true) {
+        int newSocket;
         struct sockaddr_in clientAddr;
-        socklen_t addrLen = sizeof(clientAddr);
-        int newSocket = accept(serverSocket, (struct sockaddr *)&clientAddr, &addrLen);
+        socklen_t clientLen = sizeof(clientAddr);
+        
+        if ((newSocket = accept(serverfd, (struct sockaddr *)&clientAddr, &clientLen)) < 0) {
+            perror("Socket accept failed");
+            logMessage("Socket accept failed");
+            continue;  
+        }
 
-        if (newSocket >= 0) {
-            pid_t pid = fork();
-            logMessage("Forked new process for client." + std::to_string(newSocket));
-            logMessage("PID: " + std::to_string(pid));
-            if (pid < 0) {
-                perror("Fork failed");
-                logMessage("Fork failed.");
-                close(newSocket);
-            } else if (pid == 0) {
-                close(serverSocket);
-                logMessage("New client connected.");
-                handleClient(newSocket);
-            } else {
-                logMessage("Forked new process for client.");
-                close(newSocket);
-            }
+        printf("New connection, socket fd is %d, ip is: %s, port: %d\n", 
+               newSocket, inet_ntoa(clientAddr.sin_addr), 
+               ntohs(clientAddr.sin_port));
+        logMessage("New connection, socket fd is " + std::to_string(newSocket) + 
+                  ", ip is: " + inet_ntoa(clientAddr.sin_addr) + 
+                  ", port: " + std::to_string(ntohs(clientAddr.sin_port)));
+
+        pid_t pid = fork();
+        if (pid < 0) {
+            perror("Fork failed");
+            logMessage("Fork failed");
+            close(newSocket);
+        } else if (pid == 0) {
+            close(serverfd);  
+            run(newSocket);
+            exit(0);  
+        } else {
+            close(newSocket);  
         }
     }
-
-    close(serverSocket);
     return 0;
 }

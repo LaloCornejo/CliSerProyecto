@@ -10,8 +10,10 @@ server: server.cpp
 	$(CXX) $(CXXFLAGS) server.cpp -o server
 
 clean:
-	# rm -f client server
-	rm -f *_log.txt
+	rm -f client server
 
-.PHONY: all clean
+logs:
+	rm -f *.log && touch server.log && touch client.log
+
+.PHONY: all clean logs
 
