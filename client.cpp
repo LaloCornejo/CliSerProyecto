@@ -11,7 +11,7 @@
 
 #define BUFFER_SIZE 1024
 
-std::ofstream logFile("cosole_log.txt", std::ios::app);
+std::ofstream logFile("client_log.txt", std::ios::app);
 std::mutex playersMutex;
 
 void logMessage(const std::string &message) {
