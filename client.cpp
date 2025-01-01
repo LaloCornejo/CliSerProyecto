@@ -73,54 +73,56 @@ class TriviaClient {
     }
 
     bool secureSend(const std::string &message) {
-      size_t total_send = 0;
-      size_t msgLen = message.length();
-
-      while (total_send < msgLen) {
-        ssize_t sent = send(clientSocket, message.c_str() + total_send, msgLen - total_send, 0);
-        if (sent < 0) {
-          if (errno == EWOULDBLOCK || errno == EAGAIN) {
-            continue;
-          }
-          printf("Errore nell'invio del messaggio\n");
-          logMessage("Error sending message");
-          return false;
-        }
-        total_send += sent;
+      int messageLength = strlen(message.c_str());
+      int totalSent = htonl(messageLength);
+      send(clientSocket, &totalSent, sizeof(totalSent), 0);
+      if (send(clientSocket, message.c_str(), messageLength, 0) < 0) {
+        printf("Errore nell'invio del messaggio\n");
+        logMessage("Error sending message");
+        return false;
       }
-      logMessage("Sucessfully sent total " + std::to_string(total_send) + " bytes");
-      logMessage("Message: " + message);
-     return true;
-    }
-
-    bool secureReceive(std::string &message) {
-      char buffer[BUFFER_SIZE];
-      ssize_t received = 0;
-      message.clear();
-
-      while (true) {
-        received = recv(clientSocket, buffer, BUFFER_SIZE, 0);
-        if (received < 0) {
-          if (errno == EWOULDBLOCK || errno == EAGAIN) {
-            continue;
-          }
-          printf("Errore nella ricezione del messaggio\n");
-          logMessage("Error receiving message");
-          return false;
-        } else if (received == 0) {
-          printf("Connessione chiusa dal server\n");
-          logMessage("Connection closed by server");
-          return false;
-        }
-        message.append(buffer, received);
-        if (received < BUFFER_SIZE) {
-          break;
-        }
-      }
-      logMessage("Received total " + std::to_string(message.length()) + " bytes");
-      logMessage("Received message: " + message);
+      logMessage("Sent total " + std::to_string(messageLength) + " bytes");
+      logMessage("Sent message: " + message);
       return true;
     }
+
+bool secureReceive(std::string &message) {
+ char buffer[BUFFER_SIZE] = {0};
+    int received = 0;
+
+        int bytes_read = recv(clientSocket, &received, sizeof(received), 0);
+        if (bytes_read < 0) {
+            if (errno == EWOULDBLOCK || errno == EAGAIN) {
+              return false;
+            }
+            printf("Errore nella ricezione del messaggio\n");
+            logMessage("Error receiving message");
+            return false;
+        } else if (bytes_read == 0) {
+            printf("Connessione chiusa dal server\n");
+            logMessage("Connection closed by server");
+            return false;
+        }
+        received = ntohl(received);
+        logMessage("Received total " + std::to_string(received) + " bytes");
+        bytes_read = recv(clientSocket, buffer, received, 0);
+        if (bytes_read < 0) {
+            if (errno == EWOULDBLOCK || errno == EAGAIN) {
+                return false;
+            }
+            printf("Errore nella ricezione del messaggio\n");
+            logMessage("Error receiving message");
+            return false;
+        } else if (bytes_read == 0) {
+            printf("Connessione chiusa dal server\n");
+            logMessage("Connection closed by server");
+            return false;
+        }
+        buffer[bytes_read] = '\0';
+        logMessage("Received message: " + std::string(buffer));
+        message = buffer;
+    return true;
+}
 
     void handleServerDisconnect() {
       printf("Il server ha chiuso la connessione\n");

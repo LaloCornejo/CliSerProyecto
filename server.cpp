@@ -15,8 +15,8 @@
 #include <optional>
 
 #define PORT 1234
-#define MAX_SIZE 1024
-#define MAX_CLIENT 1024
+#define BUFFER_SIZE 1024
+#define MAX_CLIENT 100
 
 std::ofstream logFile("server.log", std::ios::app);
 std::mutex playersMutex;
@@ -72,38 +72,55 @@ std::pair<int, Player>* find_player_by_socket(int socket) {
     }
 }
 
-bool secureSend(int socket, const std::string &message) {
-    size_t totalSent = 0;
-    size_t messageLength = message.length();
-
-    while (totalSent < messageLength) {
-        ssize_t sent = send(socket, message.c_str() + totalSent,
-                          messageLength - totalSent, 0);
-        if (sent == -1) {
-            if (errno == EWOULDBLOCK || errno == EAGAIN) {
-                continue;
-            }
-            logMessage("Error sending message to client");
-            return false;
-        }
-        totalSent += sent;
+bool secureSend(int clientSocket, const std::string &message) {
+      int messageLength = strlen(message.c_str());
+      int totalSent = htonl(messageLength);
+      send(clientSocket, &totalSent, sizeof(totalSent), 0);
+      if (send(clientSocket, message.c_str(), messageLength, 0) < 0) {
+        printf("Errore nell'invio del messaggio\n");
+        logMessage("Error sending message");
+        return false;
+      }
+      logMessage("Sent total " + std::to_string(messageLength) + " bytes");
+      logMessage("Sent message: " + message);
+      return true;
     }
-    logMessage("Successfully sent total of " + std::to_string(totalSent) + 
-               " bytes to " + std::to_string(socket));
-    return true;  
-}
 
 bool secureReceive(int socket, std::string &message) {
-    char buffer[MAX_SIZE] = {0};  
-    ssize_t bytesRead = recv(socket, buffer, MAX_SIZE - 1, 0);  
+    char buffer[BUFFER_SIZE] = {0};
+    int received = 0;
 
-    if (bytesRead <= 0) {  
-        logMessage("Client disconnected or error receiving message");
-        return false;
-    }
-
-    message = std::string(buffer, bytesRead);
-    logMessage("Received " + std::to_string(bytesRead) + " bytes from client: " + message);
+        int bytes_read = recv(socket, &received, sizeof(received), 0);
+        if (bytes_read < 0) {
+            if (errno == EWOULDBLOCK || errno == EAGAIN) {
+              return false;
+            }
+            printf("Errore nella ricezione del messaggio\n");
+            logMessage("Error receiving message");
+            return false;
+        } else if (bytes_read == 0) {
+            printf("Connessione chiusa dal server\n");
+            logMessage("Connection closed by server");
+            return false;
+        }
+        received = ntohl(received);
+        logMessage("Received total " + std::to_string(received) + " bytes");
+        bytes_read = recv(socket, buffer, received, 0);
+        if (bytes_read < 0) {
+            if (errno == EWOULDBLOCK || errno == EAGAIN) {
+                return false;
+            }
+            printf("Errore nella ricezione del messaggio\n");
+            logMessage("Error receiving message");
+            return false;
+        } else if (bytes_read == 0) {
+            printf("Connessione chiusa dal server\n");
+            logMessage("Connection closed by server");
+            return false;
+        }
+        buffer[bytes_read] = '\0';
+        logMessage("Received message: " + std::string(buffer));
+        message = buffer;
     return true;
 }
 
@@ -136,6 +153,7 @@ void playTrivia(int socket) {
         logMessage("Player not found for socket: " + std::to_string(socket));
         return;
     }
+    logMessage("Player found for socket: " + std::to_string(socket));
     auto& player_pair = *player_ptr;
     auto& player = player_pair.second;
     std::vector<Question> questions = handleThemeSelection(socket);
@@ -378,8 +396,9 @@ std::vector<Question> handleThemeSelection(int socket) {
         if (player.hasCompletedTech) {
             secureSend(socket, "You have already completed the technology quiz");
         }
+        logMessage("Quiz not completed yet");
         if (!secureSend(socket, "OK")) {
-          handleThemeSelection(socket);
+          return std::vector<Question>();
         }
         logMessage("Loaded technology questions for player " + player.nombre);
         return techQuestions;
@@ -388,7 +407,7 @@ std::vector<Question> handleThemeSelection(int socket) {
             secureSend(socket, "You have already completed the general knowledge quiz");
         }
         if (!secureSend(socket, "OK")) {
-          handleThemeSelection(socket);
+          return std::vector<Question>();
         }
         logMessage("Loaded general knowledge questions for player " + player.nombre);
         return generalQuestions;
