@@ -1,362 +1,332 @@
 #include <arpa/inet.h>
 #include <chrono>
-#include <iostream>
 #include <cstring>
 #include <fstream>
+#include <iostream>
 #include <mutex>
 #include <string>
+#include <sys/time.h>
 #include <thread>
 #include <unistd.h>
+#include <vector>
 
 #define BUFFER_SIZE 1024
 
 std::ofstream logFile("client.log", std::ios::out | std::ios::app);
-std::mutex playersMutex;
-
-std::string logSeparator = "----------------------------------\n\tCLIENT LOG\n----------------------------------\n";
+std::mutex logMutex;
 
 void logMessage(const std::string &message) {
-    std::lock_guard<std::mutex> lock(playersMutex);
-    auto now = std::chrono::system_clock::now();
-    logFile << "[" << std::chrono::system_clock::to_time_t(now) << "] " 
-            << message << std::endl;
+  std::lock_guard<std::mutex> lock(logMutex);
+  auto now = std::chrono::system_clock::now();
+  logFile << "[" << std::chrono::system_clock::to_time_t(now) << "] " << message
+          << std::endl;
 }
 
-void clearScreen() {
-    std::cout << "\033[2J\033[1;1H";
-}
+void clearScreen() { std::cout << "\033[2J\033[1;1H"; }
 
-void frontPage() {
+void showMenu() {
   clearScreen();
-  printf("\n==- Trivia Quiz Game -==\n");
-  printf("+++++++++++++++++++++++++++++\n");
-  printf("Menu\n");
-  printf("1. Comincia una sessione di trivia\n");
-  printf("2. Esci\n");
-  printf("La tua scelta: ");
-}
-
-void sNickname() {
-  clearScreen();
-  printf("Trivia Quiz\n");
-  printf("+++++++++++++++++++++++++++++\n");
-  printf("Scegli un nickname (deve essere univoco): ");
-}
-
-void sTheme() {
-  clearScreen();
-  printf("Quiz disponibili\n");
-  printf("+++++++++++++++++++++++++++++\n");
-  printf("1 - Curiosita sulla tecnologia\n");
-  printf("2 - Cultura generale\n");
-  printf("+++++++++++++++++++++++++++++\n");
-  printf("La tua scelta: ");
+  std::cout << "\n==- Trivia Quiz Game -==\n"
+            << "+++++++++++++++++++++++++++++\n"
+            << "Menu\n"
+            << "1. Comincia una sessione di trivia\n"
+            << "2. Esci\n"
+            << "La tua scelta: ";
 }
 
 class TriviaClient {
-  private:
-    int clientSocket;
-    std::string nickname;
-    int theme;
-    int port;
+private:
+  int clientSocket;
+  std::string nickname;
+  int theme;
+  int port;
+  bool isConnected;
 
-    std::string secureInput() {
+  bool secureSend(const std::string &message) {
+    uint32_t messageLength = htonl(message.size());
+    if (send(clientSocket, &messageLength, sizeof(messageLength), 0) < 0) {
+      logMessage("Error sending message length: " + std::to_string(errno));
+      return false;
+    }
+
+    if (send(clientSocket, message.c_str(), message.size(), 0) < 0) {
+      logMessage("Error sending message: " + std::to_string(errno));
+      return false;
+    }
+
+    logMessage("Sent: " + message);
+    return true;
+  }
+
+  bool secureReceive(std::string &message) {
+    uint32_t messageLength = 0;
+    if (recv(clientSocket, &messageLength, sizeof(messageLength), 0) <= 0) {
+      logMessage("Error receiving message length");
+      return false;
+    }
+
+    messageLength = ntohl(messageLength);
+    if (messageLength > BUFFER_SIZE) {
+      logMessage("Message too large: " + std::to_string(messageLength));
+      return false;
+    }
+
+    std::vector<char> buffer(messageLength + 1);
+    int received = recv(clientSocket, buffer.data(), messageLength, 0);
+    if (received <= 0) {
+      logMessage("Error receiving message");
+      return false;
+    }
+
+    buffer[received] = '\0';
+    message = buffer.data();
+    logMessage("Received: " + message);
+    return true;
+  }
+
+  void setNickname() {
+    while (true) {
+      clearScreen();
+      std::cout << "Trivia Quiz\n"
+                << "+++++++++++++++++++++++++++++\n"
+                << "Scegli un nickname (deve essere univoco): ";
+
+      std::getline(std::cin, nickname);
+
+      if (nickname.empty()) {
+        std::cout
+            << "Nickname non può essere vuoto. Premi invio per riprovare...";
+        std::cin.get();
+        continue;
+      }
+
+      if (!secureSend(nickname)) {
+        std::cout
+            << "Errore nell'invio del nickname. Premi invio per riprovare...";
+        std::cin.get();
+        continue;
+      }
+
+      std::string response;
+      if (!secureReceive(response)) {
+        std::cout << "Errore nella ricezione della risposta. Premi invio per "
+                     "riprovare...";
+        std::cin.get();
+        continue;
+      }
+
+      if (response == "OK") {
+        return;
+      }
+
+      if (response == "NICKNAME_ALREADY_USED") {
+        std::cout << "Nickname già in uso. Premi invio per riprovare...";
+        std::cin.get();
+        continue;
+      }
+    }
+  }
+
+  bool selectTheme() {
+    while (true) {
+      clearScreen();
+      std::cout << "Quiz disponibili\n"
+                << "+++++++++++++++++++++++++++++\n"
+                << "1 - Curiosita sulla tecnologia\n"
+                << "2 - Cultura generale\n"
+                << "+++++++++++++++++++++++++++++\n"
+                << "La tua scelta: ";
+
       std::string input;
       std::getline(std::cin, input);
-      if ( input.empty() ) {
-        printf("Nessun input rilevato, riprova\n");
-        printf("Premi invio per continuare...");
-        std::cin.ignore();
-        secureInput();
+
+      if (input != "1" && input != "2") {
+        std::cout << "Scelta non valida. Premi invio per riprovare...";
+        std::cin.get();
+        continue;
       }
-      return input;
-    }
 
-    bool secureSend(const std::string &message) {
-      int messageLength = strlen(message.c_str());
-      int totalSent = htonl(messageLength);
-      send(clientSocket, &totalSent, sizeof(totalSent), 0);
-      if (send(clientSocket, message.c_str(), messageLength, 0) < 0) {
-        printf("Errore nell'invio del messaggio\n");
-        logMessage("Error sending message");
-        return false;
+      if (!secureSend(input)) {
+        std::cout
+            << "Errore nell'invio della scelta. Premi invio per riprovare...";
+        std::cin.get();
+        continue;
       }
-      logMessage("Sent total " + std::to_string(messageLength) + " bytes");
-      logMessage("Sent message: " + message);
-      return true;
-    }
 
-bool secureReceive(std::string &message) {
- char buffer[BUFFER_SIZE] = {0};
-    int received = 0;
-
-        int bytes_read = recv(clientSocket, &received, sizeof(received), 0);
-        if (bytes_read < 0) {
-            if (errno == EWOULDBLOCK || errno == EAGAIN) {
-              return false;
-            }
-            printf("Errore nella ricezione del messaggio\n");
-            logMessage("Error receiving message");
-            return false;
-        } else if (bytes_read == 0) {
-            printf("Connessione chiusa dal server\n");
-            logMessage("Connection closed by server");
-            return false;
-        }
-        received = ntohl(received);
-        logMessage("Received total " + std::to_string(received) + " bytes");
-        bytes_read = recv(clientSocket, buffer, received, 0);
-        if (bytes_read < 0) {
-            if (errno == EWOULDBLOCK || errno == EAGAIN) {
-                return false;
-            }
-            printf("Errore nella ricezione del messaggio\n");
-            logMessage("Error receiving message");
-            return false;
-        } else if (bytes_read == 0) {
-            printf("Connessione chiusa dal server\n");
-            logMessage("Connection closed by server");
-            return false;
-        }
-        buffer[bytes_read] = '\0';
-        logMessage("Received message: " + std::string(buffer));
-        message = buffer;
-    return true;
-}
-
-    void handleServerDisconnect() {
-      printf("Il server ha chiuso la connessione\n");
-      logMessage("Server closed the connection");
-      close(clientSocket);
-      exit(1);
-    }
-
-    bool setTheme() {
-      logMessage("-------------------- Theme Selection --------------------");
-      sTheme();
-      std::string input = secureInput();
-      try {
-        theme = std::stoi(input);
-      } catch (std::invalid_argument &e) {
-        logMessage("Invalid theme: " + input);
-        printf("Input non valido, riprova\n");
-        printf("Premi invio per continuare...");
-        std::cin.ignore();
-        setTheme();
-      }
-      logMessage("Sending theme: " + std::to_string(theme));
-      if (!secureSend(std::to_string(theme))) {
-        printf("Errore nell'invio del tema, prova di nuovo\n");
-        printf("Press enter to continue...");
-        logMessage("Error sending theme");
-        std::cin.ignore();
-        setTheme();
-      }
-      logFile.seekp(-1, std::ios_base::end);
       std::string response;
-      logMessage("Waiting for response");
       if (!secureReceive(response)) {
-        printf("Errore nella ricezione della risposta\n");
-        logMessage("Error receiving response");
-        return false;
+        std::cout << "Errore nella ricezione della risposta. Premi invio per "
+                     "riprovare...";
+        std::cin.get();
+        continue;
       }
-      logFile.seekp(-1, std::ios_base::end);
+
       if (response == "OK") {
-        logMessage("Theme set");
+        theme = std::stoi(input);
         return true;
       }
+
       if (response == "INVALID_THEME") {
-        printf("Tema non valido, prova di nuovo\n");
-        printf("Press enter to continue...");
-        logMessage("Invalid theme");
-        std::cin.ignore();
-        setTheme();
+        std::cout << "Tema non valido. Premi invio per riprovare...";
+        std::cin.get();
+        continue;
       }
-      return true;
+
+      std::cout << response << "\nPremi invio per continuare...";
+      std::cin.get();
+      return false;
     }
+  }
 
-    bool setNickname() {
-      logMessage("-------------------- Nickname Selection --------------------");
-      sNickname();
-      nickname = secureInput();
-      logMessage("Sending nickname: " + nickname);
-      if (!secureSend(nickname)) { 
-        printf("Errore nell'invio del nickname, prova di nuovo\n");
-        printf("Press enter to continue...");
-        logMessage("Error sending nickname");
-        std::cin.ignore();
-        setNickname();
-      }
-      logFile.seekp(-1, std::ios_base::end);
-      std::string response;
-      logMessage("Waiting for response");
-      if (!secureReceive(response)) { 
-        printf("Errore nella ricezione della risposta\n");
-        logMessage("Error receiving response");
-        return false;
-      }
-      logFile.seekp(-1, std::ios_base::end);
-      if (response == "OK") { 
-        logMessage("Nickname set");
-        return true;
-      }
-      if (response == "NICKNAME_ALREADY_USED") {
-        printf("Il nickname e' gia' in uso, prova di nuovo\n");
-        printf("Press enter to continue...");
-        logMessage("Nickname already used");
-        std::cin.ignore();
-        setNickname();
-      }
-      return true;
-    }
-
-  public:
-    TriviaClient(int serverPort) : clientSocket(0), port(serverPort), theme(0) {
-        nickname = "";
-    }
-
-    void connectToServer() {
-     struct sockaddr_in serverAddr;
-
-        if ((clientSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-            printf("Errore nella creazione del socket\n");
-            logMessage("Socket creation error");
-            return;
-        }
-
-        serverAddr.sin_family = AF_INET;
-        serverAddr.sin_port = htons(port);
-
-        if (inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr) <= 0) {
-            printf("Indirizzo non valido\n");
-            logMessage("Invalid address/ Address not supported");
-            return;
-        }
-
-        if (connect(clientSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0) {
-            printf("Connessione fallita\n");
-            logMessage("Connection Failed");
-            return;
-        }
-    }
-
-    void playQuestions() {
-      std::string quesiton;
-      while ( true ) {
-        /*Start send and receive questions*/
-        if (!secureReceive(quesiton)) {
-          printf("Errore nella ricezione della domanda\n");
-          logMessage("Error receiving question");
-          return;
-        }
-        if (quesiton == "COMPLETED_QUIZ"){
-          printf("*******************************\n\tHai completato il quiz\n*******************************\n");
-          logMessage("Quiz completed");
-          setTheme();
-        }
-        std::string themeString = (theme == 1) ? "Curiosita' sulla tecnologia" : "Cultura generale";
-        printf("\033[2J\033[1;1H");
-        printf("\n    Quiz - %s\n**************************************\n%s\n**************************************\n", themeString.c_str(), quesiton.c_str());
-        std::string answer;
-        answer = secureInput();
-        logMessage("Sending answer: " + answer);
-        if (!secureSend(answer)) {
-          printf("Errore nell'invio della risposta\n");
-          logMessage("Error sending answer");
-          return;
-        }
-        logFile.seekp(-1, std::ios_base::end);
-        if (answer == "show score" || answer == "endquiz") {
-          if (answer == "show score") {
-            std::string msg = "show score";
-            logMessage("Requesting scoreboard");
-            if (!secureSend(msg)) {
-              printf("Errore nell'invio del punteggio\n");
-              logMessage("Error sending score");
-              return;
-            }
-            logFile.seekp(-1, std::ios_base::end);
-            std::string scoreboard;
-            logMessage("Waiting for scoreboard");
-            if (!secureReceive(scoreboard)) {
-              printf("Errore nella ricezione del punteggio\n");
-              logMessage("Error receiving score");
-              return;
-            }
-            logFile.seekp(-1, std::ios_base::end);
-            printf("\033[2J\033[1;1H");
-            printf("%s\n", scoreboard.c_str());
-            continue;
-          }
-
-          if (answer == "endquiz") {
-            std::string finishMessage;
-            if (!secureReceive(finishMessage)) {
-              printf("Errore nella ricezione del messaggio di fine quiz\n");
-              logMessage("Error receiving finish message");
-              return;
-            }
-            printf("%s\n", finishMessage.c_str());
-            printf("Premi invio per continuare...");
-            std::cin.ignore();
-            break;
-          }
-        }
-        /*Finich send and receive questions*/
-
-        /*Start receive question result*/
-        std::string qStatus;
-        if (!secureReceive(qStatus)) {
-          printf("Errore nella ricezione dello stato della risposta\n");
-          logMessage("Error receiving answer status");
-          return;
-        }
-        printf("\033[2J\033[1;1H");
-        printf("\n*****************************\n\t%s\n*****************************\n", qStatus.c_str());
-        printf("Premi invio per continuare...");
-        std::cin.ignore();
-        printf("\033[2J\033[H");
-      }
-    }
-
-    void start() {
-      frontPage();
-      int choice;
-      choice = std::stoi(secureInput());
-      if (choice == 1) {
-        connectToServer();
-        while (!setNickname()) {
-          printf("Errore nella scelta del nickname\n");
-          logMessage("Error setting nickname");
-          return;
-        }
-        while (!setTheme()) {
-          printf("Errore nella scelta del tema\n");
-          logMessage("Error setting theme");
-          return;
-        }
-        playQuestions();
-      } else if (choice == 2) {
-        printf("Arrivederci\n");
-        logMessage("Goodbye");
+  void playQuiz() {
+    while (true) {
+      std::string question;
+      if (!secureReceive(question)) {
+        std::cout << "Connessione con il server persa.\n";
         return;
+      }
+
+      if (question == "COMPLETED_QUIZ") {
+        std::cout << "\n*** Quiz Completato ***\n";
+        if (!selectTheme()) {
+          return;
+        }
+        continue;
+      }
+
+      clearScreen();
+      std::string themeStr =
+          (theme == 1) ? "Curiosita sulla tecnologia" : "Cultura generale";
+      std::cout << "\nQuiz - " << themeStr << "\n"
+                << "********************************\n"
+                << question << "\n"
+                << "********************************\n"
+                << "Risposta (o 'show score'/'endquiz'): ";
+
+      std::string answer;
+      std::getline(std::cin, answer);
+
+      if (!secureSend(answer)) {
+        std::cout << "Errore nell'invio della risposta.\n";
+        return;
+      }
+
+      if (answer == "show score") {
+        std::string scoreboard;
+        if (!secureReceive(scoreboard)) {
+          std::cout << "Errore nella ricezione del punteggio.\n";
+          return;
+        }
+        clearScreen();
+        std::cout << scoreboard << "\nPremi invio per continuare...";
+        std::cin.get();
+        continue;
+      }
+
+      if (answer == "endquiz") {
+        std::string endMessage;
+        if (!secureReceive(endMessage)) {
+          std::cout << "Errore nella ricezione del messaggio finale.\n";
+          return;
+        }
+        std::cout << endMessage << "\nPremi invio per continuare...";
+        std::cin.get();
+        break;
+      }
+
+      std::string result;
+      if (!secureReceive(result)) {
+        std::cout << "Errore nella ricezione del risultato.\n";
+        return;
+      }
+
+      clearScreen();
+      std::cout << "\n********************************\n"
+                << "\t" << result << "\n"
+                << "********************************\n"
+                << "Premi invio per continuare...";
+      std::cin.get();
+    }
+  }
+
+public:
+  TriviaClient(int serverPort) : port(serverPort), isConnected(false) {}
+
+  bool connectToServer() {
+    struct sockaddr_in serverAddr;
+
+    clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+    if (clientSocket < 0) {
+      logMessage("Creazione socket fallita");
+      return false;
+    }
+
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(port);
+    serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+
+    if (connect(clientSocket, (struct sockaddr *)&serverAddr,
+                sizeof(serverAddr)) < 0) {
+      logMessage("Connessione fallita");
+      return false;
+    }
+
+    isConnected = true;
+    return true;
+  }
+
+  void start() {
+    std::string input;
+    while (true) {
+      showMenu();
+      std::getline(std::cin, input);
+
+      if (input == "1") {
+        if (!isConnected && !connectToServer()) {
+          std::cout << "Impossibile connettersi al server.\nPremi invio per "
+                       "continuare...";
+          std::cin.get();
+          continue;
+        }
+
+        if (!secureSend("START")) {
+          std::cout
+              << "Errore nell'avvio del gioco.\nPremi invio per continuare...";
+          std::cin.get();
+          continue;
+        }
+
+        setNickname();
+        if (selectTheme()) {
+          playQuiz();
+        }
+      } else if (input == "2") {
+        std::cout << "Arrivederci!\n";
+        break;
       } else {
-        printf("Scelta non valida\n");
-        logMessage("Invalid choice");
-        return;
+        std::cout << "Scelta non valida.\nPremi invio per continuare...";
+        std::cin.get();
       }
     }
+
+    if (isConnected) {
+      close(clientSocket);
+    }
+  }
 };
 
-int main (int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
   if (argc != 2) {
-    std::cerr << "Uso: " << argv[0] << "<port>" << std::endl;
+    std::cerr << "Uso: " << argv[0] << " <porta>\n";
     return 1;
   }
 
-  logMessage(logSeparator);
+  int port = std::atoi(argv[1]);
+  if (port <= 0 || port > 65535) {
+    std::cerr << "Numero di porta non valido\n";
+    return 1;
+  }
 
-  int port = atoi(argv[1]);
   TriviaClient client(port);
   client.start();
 

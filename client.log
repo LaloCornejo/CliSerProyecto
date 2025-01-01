@@ -1,22 +1,8 @@
-[1735750858] ----------------------------------
-	CLIENT LOG
-----------------------------------
-
-[1735750859] -------------------- Nickname Selection --------------------
-[1735750861] Sent total 4 bytes
-[1735750861] Sent message: Lalo
-[1735750864] Connection closed by server
-[1735750864] Error receiving response
-[1735750864] Error setting nickname
-[1735751239] ----------------------------------
-	CLIENT LOG
-----------------------------------
-
-[1735751239] -------------------- Nickname Selection --------------------
-[1735751242] Sending nickname: Lalo
-[1735751242] Sent total 4 bytes
-[1735751242] Sent message: Lalo
-[1735751242] Waiting for response
-[1735751244] Connection closed by server
-[1735751244] Error receiving response
-[1735751244] Error setting nickname
+[1735763032] Sent: START
+[1735763034] Sent: Lalo
+[1735763034] Received: OK
+[1735763037] Sent: 1
+[1735763037] Received: OK
+[1735763037] Received: Who founded Microsoft?
+[1735763042] Sent: endquiz
+[1735763042] Received: Quiz terminated.

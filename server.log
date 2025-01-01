@@ -1,24 +1,15 @@
-[1735750853] ----------------------------------
-	SERVER LOG
-----------------------------------
+[1735762923] ------------------------------ SERVER START -----------------------------
 
-[1735750859] New connection, socket is 5, ip is: 127.0.0.1, port: 57181
-[1735750859] Adding to list of sockets as 0
-[1735750861] -------- Run --------
-[1735750861] Socket: 5
-[1735750861] Loaded questions
-[1735750861] -------- New Player --------
-[1735750861] Socket: 5
-[1735750861] Waiting for nickname from player 5
-[1735751236] ----------------------------------
-	SERVER LOG
-----------------------------------
+[1735763020] ------------------------------ SERVER START -----------------------------
 
-[1735751239] New connection, socket is 5, ip is: 127.0.0.1, port: 57318
-[1735751239] Adding to list of sockets as 0
-[1735751242] -------- Run --------
-[1735751242] Socket: 5
-[1735751242] Loaded questions
-[1735751242] -------- New Player --------
-[1735751242] Socket: 5
-[1735751242] Waiting for nickname from player 5
+[1735763020] ********** PRINTING SCOREBOARD **********
+[1735763032] ********** ENTERING handleClient **********
+[1735763032] Received message of size: 5
+[1735763034] Received message of size: 4
+[1735763034] Sent message of size: 2
+[1735763034] ********** PRINTING SCOREBOARD **********
+[1735763037] Received message of size: 1
+[1735763037] Sent message of size: 2
+[1735763037] Sent message of size: 22
+[1735763042] Received message of size: 7
+[1735763042] Sent message of size: 16
