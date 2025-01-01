@@ -12,10 +12,11 @@
 #include <errno.h>
 #include <iostream>
 #include <algorithm>
+#include <sys/socket.h>
 
 #define PORT 1234
 #define BUFFER_SIZE 1024
-#define MAX_CLIENT 100
+#define MAX_CLIENT 10
 
 std::ofstream logFile("server.log", std::ios::app);
 std::mutex playersMutex;
@@ -44,7 +45,6 @@ struct Player {
 std::vector<Question> techQuestions;
 std::vector<Question> generalQuestions;
 std::vector<std::pair<int, Player>> players;
-
 
 void playTrivia(int socket);
 bool handleNewPlayer(int socket);
@@ -231,6 +231,8 @@ void playTrivia(int socket) {
 }
 
 void run(int socket) {
+  logMessage("-------- Run --------");
+  logMessage("Socket: " + std::to_string(socket));
     try {
         techQuestions = loadQuestions("tech.txt");
         generalQuestions = loadQuestions("general.txt");
@@ -271,21 +273,27 @@ void sendScoreboard(int socket) {
     ss << "Technology Quiz Scores:\n";
     
     std::lock_guard<std::mutex> lock(playersMutex);
+
+    std::sort(players.begin(), players.end(), [](const std::pair<int, Player>& a, const std::pair<int, Player>& b) {
+        return a.second.techScore > b.second.techScore;
+    });
+
     for (const auto& player_pair : players) {
         const auto& player = player_pair.second;
-        if (player.techScore > 0) {
             ss << player.nombre << ": " << player.techScore << "/" 
             << techQuestions.size() << "\n";
-        }
     }
     
     ss << "\nGeneral Knowledge Scores:\n";
+
+    std::sort(players.begin(), players.end(), [](const std::pair<int, Player>& a, const std::pair<int, Player>& b) {
+        return a.second.generalScore > b.second.generalScore;
+    });
+
     for (const auto& player_pair : players) {
         const auto& player = player_pair.second;
-        if (player.generalScore > 0) {
             ss << player.nombre << ": " << player.generalScore << "/" 
             << generalQuestions.size() << "\n";
-        }
     }
     
     secureSend(socket, ss.str());
@@ -303,6 +311,7 @@ void printScoreboard() {
       << "+++++++++++++++++++++++++++++++++++++++\n";
     
     std::lock_guard<std::mutex> lock(playersMutex);
+
     ss << "Partecipanti attivi (" << players.size() << ")\n";
     for (const auto& player_pair : players) {
         const auto& player = player_pair.second;
@@ -310,6 +319,12 @@ void printScoreboard() {
     }
     
     ss << "\nPuntaggi Tecnologia:\n";
+
+    // Sort players by tech score in decreasing order
+    std::sort(players.begin(), players.end(), [](const std::pair<int, Player>& a, const std::pair<int, Player>& b) {
+        return a.second.techScore > b.second.techScore;
+    });
+
     for (const auto& player_pair : players) {
         const auto& player = player_pair.second;
         if (player.techScore >= 0) {
@@ -319,6 +334,12 @@ void printScoreboard() {
     }
     
     ss << "\nPuntaggi Cultura Generale:\n";
+
+    // Sort players by general score in decreasing order
+    std::sort(players.begin(), players.end(), [](const std::pair<int, Player>& a, const std::pair<int, Player>& b) {
+        return a.second.generalScore > b.second.generalScore;
+    });
+
     for (const auto& player_pair : players) {
         const auto& player = player_pair.second;
         if (player.generalScore >= 0) {
@@ -351,14 +372,18 @@ void printScoreboard() {
 
 bool handleNewPlayer(int socket) {
   logMessage("-------- New Player --------");
+  logMessage("Socket: " + std::to_string(socket));
     std::string nickname;
+    logMessage("Waiting for nickname from player " + std::to_string(socket));
     if (!secureReceive(socket, nickname)) {
         logMessage("Error receiving nickname");
         exit(EXIT_FAILURE);
     }
+    //errase last line of the logFile 
+    logFile.seekp(-1, std::ios_base::end);
 
-    {
-        std::lock_guard<std::mutex> lock(playersMutex);
+    /*{*/
+    /*    std::lock_guard<std::mutex> lock(playersMutex);*/
         
         for (const auto& player_pair : players) {
             if (player_pair.second.nombre == nickname) {
@@ -373,8 +398,14 @@ bool handleNewPlayer(int socket) {
             0, 0, 0, 0,
             false, false
         };
+        printf("New player joined: %s with socket no: \n", nickname.c_str(), socket);
+
         players.push_back(std::make_pair(socket, newPlayer));
-    }
+        logMessage("New player joined: " + nickname);
+      /*for (const auto& player : players) {*/
+      /*  logMessage("Player: " + player.second.nombre);*/
+      /*}*/
+    /*}*/
 
     secureSend(socket, "OK");
     logMessage("New player joined: " + nickname);
@@ -413,12 +444,12 @@ std::vector<Question> handleThemeSelection(int socket) {
         player.currentT = 1;
         return techQuestions;
     } else if (theme == "2") {  
-        if (player.hasCompletedGeneral)
+        if (player.hasCompletedGeneral) {
             secureSend(socket, "You have already completed the general knowledge quiz");
-
-        if (!secureSend(socket, "OK")) 
+        }
+        if (!secureSend(socket, "OK")) {
           return std::vector<Question>();
-
+        }
         logMessage("Loaded general knowledge questions for player " + player.nombre);
         player.currentT = 2;
         return generalQuestions;
@@ -430,9 +461,11 @@ std::vector<Question> handleThemeSelection(int socket) {
 
 int main() {
     logMessage(logSeparator);
-    int serverfd;
-    struct sockaddr_in serverAddr;
-    int addrLen = sizeof(serverAddr);
+    int serverfd, newSocket, maxSd, sd, activity;
+    struct sockaddr_in address;
+    int addrLen = sizeof(address), clientScoket[MAX_CLIENT] = {0};
+    fd_set readfds;
+    char buffer[BUFFER_SIZE] = {0};
 
     // Socket creation (removed duplicate socket creation)
     if ((serverfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -441,19 +474,11 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    // Set SO_REUSEADDR option
-    int opt = 1;
-    if (setsockopt(serverfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
-        perror("setsockopt failed");
-        logMessage("setsockopt failed");
-        exit(EXIT_FAILURE);
-    }
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_port = htons(PORT);
 
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_addr.s_addr = INADDR_ANY;
-    serverAddr.sin_port = htons(PORT);
-
-    if (bind(serverfd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0) {
+    if (bind(serverfd, (struct sockaddr *)&address, sizeof(address)) < 0) {
         perror("Socket bind failed");
         logMessage("Socket bind failed");
         exit(EXIT_FAILURE);
@@ -465,39 +490,71 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    printf("Server listening on port %d\n", PORT);
     printScoreboard();
+    printf("Server TCP listening on port %d\n", PORT);
 
     while (true) {
-        int newSocket;
-        struct sockaddr_in clientAddr;
-        socklen_t clientLen = sizeof(clientAddr);
+      FD_ZERO(&readfds);
         
-        if ((newSocket = accept(serverfd, (struct sockaddr *)&clientAddr, &clientLen)) < 0) {
-            perror("Socket accept failed");
-            logMessage("Socket accept failed");
-            continue;  
+      FD_SET(serverfd, &readfds);
+      maxSd = serverfd;
+
+      for (int i = 0; i < MAX_CLIENT; i++) {
+        sd = clientScoket[i];
+        if (sd > 0) {
+          FD_SET(sd, &readfds);
+        }
+        if (sd > maxSd) {
+          maxSd = sd;
+        }
+      }
+
+      activity = select(maxSd + 1, &readfds, NULL, NULL, NULL);
+      if ((activity < 0) && (errno != EINTR))  {
+        printf("Select error\n");
+        logMessage("Select error");
+      }
+
+      if (FD_ISSET(serverfd, &readfds)) {
+        if ((newSocket = accept(serverfd, (struct sockaddr *)&address, (socklen_t*)&addrLen)) < 0) {
+          perror("Socket accept failed");
+          logMessage("Socket accept failed");
+          continue;  
         }
 
-        printf("New connection, socket fd is %d, ip is: %s, port: %d\n", 
-               newSocket, inet_ntoa(clientAddr.sin_addr), 
-               ntohs(clientAddr.sin_port));
-        logMessage("New connection, socket fd is " + std::to_string(newSocket) + 
-                  ", ip is: " + inet_ntoa(clientAddr.sin_addr) + 
-                  ", port: " + std::to_string(ntohs(clientAddr.sin_port)));
+        printf("New connection, socket is %d, ip is: %s, port: %d\n", 
+               newSocket, inet_ntoa(address.sin_addr), 
+               ntohs(address.sin_port));
+        logMessage("New connection, socket is " + std::to_string(newSocket) + 
+                  ", ip is: " + inet_ntoa(address.sin_addr) + 
+                  ", port: " + std::to_string(ntohs(address.sin_port)));
 
-        pid_t pid = fork();
-        if (pid < 0) {
-            perror("Fork failed");
-            logMessage("Fork failed");
-            close(newSocket);
-        } else if (pid == 0) {
-            close(serverfd);  
-            run(newSocket);
-            exit(0);  
-        } else {
-            close(newSocket);  
+        for (int i = 0; i < MAX_CLIENT; i++) {
+          if (clientScoket[i] == 0) {
+            clientScoket[i] = newSocket;
+            printf("Adding to list of sockets as %d\n", i);
+            logMessage("Adding to list of sockets as " + std::to_string(i));
+            break;
+          }
         }
-    }
-    return 0;
+      }
+
+      for (int i = 0; i < MAX_CLIENT; i++) {
+        sd = clientScoket[i];
+        if (FD_ISSET(sd, &readfds)) {
+          if (read(sd, buffer, BUFFER_SIZE) == 0) {
+            getpeername(sd, (struct sockaddr*)&address, (socklen_t*)&addrLen);
+            printf("Host disconnected, ip %s, port %d\n", 
+                   inet_ntoa(address.sin_addr), ntohs(address.sin_port));
+            logMessage("Host disconnected, ip " + std::string(inet_ntoa(address.sin_addr)) + 
+                      ", port " + std::to_string(ntohs(address.sin_port)));
+            close(sd);
+            clientScoket[i] = 0;
+          } else {
+            run(sd);
+          }
+        }
+      }
+  }
+  return 0;
 }

@@ -144,7 +144,7 @@ bool secureReceive(std::string &message) {
         std::cin.ignore();
         setTheme();
       }
-      logMessage("*Selected theme: " + std::to_string(theme));
+      logMessage("Sending theme: " + std::to_string(theme));
       if (!secureSend(std::to_string(theme))) {
         printf("Errore nell'invio del tema, prova di nuovo\n");
         printf("Press enter to continue...");
@@ -152,12 +152,15 @@ bool secureReceive(std::string &message) {
         std::cin.ignore();
         setTheme();
       }
+      logFile.seekp(-1, std::ios_base::end);
       std::string response;
+      logMessage("Waiting for response");
       if (!secureReceive(response)) {
         printf("Errore nella ricezione della risposta\n");
         logMessage("Error receiving response");
         return false;
       }
+      logFile.seekp(-1, std::ios_base::end);
       if (response == "OK") {
         logMessage("Theme set");
         return true;
@@ -176,6 +179,7 @@ bool secureReceive(std::string &message) {
       logMessage("-------------------- Nickname Selection --------------------");
       sNickname();
       nickname = secureInput();
+      logMessage("Sending nickname: " + nickname);
       if (!secureSend(nickname)) { 
         printf("Errore nell'invio del nickname, prova di nuovo\n");
         printf("Press enter to continue...");
@@ -183,12 +187,15 @@ bool secureReceive(std::string &message) {
         std::cin.ignore();
         setNickname();
       }
+      logFile.seekp(-1, std::ios_base::end);
       std::string response;
+      logMessage("Waiting for response");
       if (!secureReceive(response)) { 
         printf("Errore nella ricezione della risposta\n");
         logMessage("Error receiving response");
         return false;
       }
+      logFile.seekp(-1, std::ios_base::end);
       if (response == "OK") { 
         logMessage("Nickname set");
         return true;
@@ -252,26 +259,31 @@ bool secureReceive(std::string &message) {
         printf("\n    Quiz - %s\n**************************************\n%s\n**************************************\n", themeString.c_str(), quesiton.c_str());
         std::string answer;
         answer = secureInput();
+        logMessage("Sending answer: " + answer);
         if (!secureSend(answer)) {
           printf("Errore nell'invio della risposta\n");
           logMessage("Error sending answer");
           return;
         }
-
+        logFile.seekp(-1, std::ios_base::end);
         if (answer == "show score" || answer == "endquiz") {
           if (answer == "show score") {
             std::string msg = "show score";
+            logMessage("Requesting scoreboard");
             if (!secureSend(msg)) {
               printf("Errore nell'invio del punteggio\n");
               logMessage("Error sending score");
               return;
             }
+            logFile.seekp(-1, std::ios_base::end);
             std::string scoreboard;
+            logMessage("Waiting for scoreboard");
             if (!secureReceive(scoreboard)) {
               printf("Errore nella ricezione del punteggio\n");
               logMessage("Error receiving score");
               return;
             }
+            logFile.seekp(-1, std::ios_base::end);
             printf("\033[2J\033[1;1H");
             printf("%s\n", scoreboard.c_str());
             continue;
