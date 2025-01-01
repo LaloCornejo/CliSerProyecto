@@ -12,7 +12,6 @@
 #include <errno.h>
 #include <iostream>
 #include <algorithm>
-#include <optional>
 
 #define PORT 1234
 #define BUFFER_SIZE 1024
@@ -215,6 +214,20 @@ void playTrivia(int socket) {
         }
         player.currentQ++;
     }
+    if (player.currentT == 1) {
+        player.hasCompletedTech = true;
+        player.currentQ = 0;
+        logMessage("Player " + player.nombre + " has completed the technology quiz");
+    } else if (player.currentT == 2) {
+        player.hasCompletedGeneral = true;
+        player.currentQ = 0;
+        logMessage("Player " + player.nombre + " has completed the general knowledge quiz");
+    }
+    printScoreboard();
+    std::string finalMsg = "COMPLETED_QUIZ";
+    if (!secureSend(socket, finalMsg)) {
+        logMessage("Error sending quiz completed message to player " + player.nombre);
+    }
 }
 
 void run(int socket) {
@@ -355,15 +368,11 @@ bool handleNewPlayer(int socket) {
             }
         }
 
-        Player newPlayer;
-        newPlayer.nombre = nickname;
-        newPlayer.currentT = 0;
-        newPlayer.currentQ = 0;
-        newPlayer.techScore = 0;
-        newPlayer.generalScore = 0;
-        newPlayer.hasCompletedTech = false;
-        newPlayer.hasCompletedGeneral = false;
-
+        Player newPlayer = {
+            nickname,
+            0, 0, 0, 0,
+            false, false
+        };
         players.push_back(std::make_pair(socket, newPlayer));
     }
 
@@ -378,13 +387,13 @@ std::vector<Question> handleThemeSelection(int socket) {
     std::string theme;
     if (!secureReceive(socket, theme)) {
         logMessage("Error receiving theme selection");
-        handleThemeSelection(socket);
+        return std::vector<Question>();
     }
 
     auto player_opt = find_player_by_socket(socket);
     if (!player_opt) {
         logMessage("Player not found for socket: " + std::to_string(socket));
-        handleThemeSelection(socket);
+        return std::vector<Question>();
     }
 
     auto& player_pair = *player_opt;
@@ -401,20 +410,22 @@ std::vector<Question> handleThemeSelection(int socket) {
           return std::vector<Question>();
         }
         logMessage("Loaded technology questions for player " + player.nombre);
+        player.currentT = 1;
         return techQuestions;
     } else if (theme == "2") {  
-        if (player.hasCompletedGeneral) {
+        if (player.hasCompletedGeneral)
             secureSend(socket, "You have already completed the general knowledge quiz");
-        }
-        if (!secureSend(socket, "OK")) {
+
+        if (!secureSend(socket, "OK")) 
           return std::vector<Question>();
-        }
+
         logMessage("Loaded general knowledge questions for player " + player.nombre);
+        player.currentT = 2;
         return generalQuestions;
     }
     secureSend(socket, "INVALID_THEME");
     logMessage("Invalid theme selection from player " + player.nombre);
-    handleThemeSelection(socket);
+    return std::vector<Question>();
 }
 
 int main() {

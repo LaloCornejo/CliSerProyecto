@@ -1,72 +1,183 @@
-[1735702978] ----------------------------------
+[1735739505] ----------------------------------
 	CLIENT LOG
 ----------------------------------
 
-[1735702980] -------------------- Nickname Selection --------------------
-[1735702983] Sent total 4 bytes
-[1735702983] Sent message: Lalo
-[1735702983] Received total 2 bytes
-[1735702983] Received message: OK
-[1735702983] Nickname set
-[1735702983] -------------------- Theme Selection --------------------
-[1735702985] Sent total 1 bytes
-[1735702985] Sent message: 1
-[1735702985] Received total 2 bytes
-[1735702985] Received message: OK
-[1735702985] Theme set
-[1735702992] Connection closed by server
-[1735702992] Error receiving question
-[1735703405] ----------------------------------
+[1735739509] -------------------- Nickname Selection --------------------
+[1735739511] Sent total 4 bytes
+[1735739511] Sent message: Lalo
+[1735739511] Received total 2 bytes
+[1735739511] Received message: OK
+[1735739511] Nickname set
+[1735739511] -------------------- Theme Selection --------------------
+[1735739567] ----------------------------------
 	CLIENT LOG
 ----------------------------------
 
-[1735703410] -------------------- Nickname Selection --------------------
-[1735703413] Sent total 4 bytes
-[1735703413] Sent message: LAlo
-[1735703413] Received total 2 bytes
-[1735703413] Received message: OK
-[1735703413] Nickname set
-[1735703413] -------------------- Theme Selection --------------------
-[1735703415] Sent total 1 bytes
-[1735703415] Sent message: 1
-[1735703415] Received total 2 bytes
-[1735703415] Received message: OK
-[1735703415] Theme set
-[1735703415] Received total 22 bytes
-[1735703415] Received message: Who founded Microsoft?
-[1735703427] Sent total 10 bytes
-[1735703427] Sent message: Bill Gates
-[1735703427] Received total 7 bytes
-[1735703427] Received message: CORRECT
-[1735703428] Received total 72 bytes
-[1735703428] Received message: Which company introduced the first commercial personal computer in 1981?
-[1735703435] Sent total 3 bytes
-[1735703435] Sent message: IBM
-[1735703435] Received total 7 bytes
-[1735703435] Received message: CORRECT
-[1735703436] Received total 32 bytes
-[1735703436] Received message: Who invented the World Wide Web?
-[1735703441] Sent total 4 bytes
-[1735703441] Sent message: Paul
-[1735703441] Received total 9 bytes
-[1735703441] Received message: INCORRECT
-[1735703442] Received total 24 bytes
-[1735703442] Received message: What does CPU stand for?
-[1735703450] Sent total 23 bytes
-[1735703450] Sent message: Central Processing Unit
-[1735703450] Received total 7 bytes
-[1735703450] Received message: CORRECT
-[1735703450] Received total 58 bytes
-[1735703450] Received message: What programming language was created by Guido van Rossum?
-[1735703455] Sent total 6 bytes
-[1735703455] Sent message: Python
-[1735703455] Received total 7 bytes
-[1735703455] Received message: CORRECT
-[1735703456] Received total 33 bytes
-[1735703456] Received message: En que lago me ganaab de la caca?
-[1735703466] Sent total 13 bytes
-[1735703466] Sent message: Lago titikaka
-[1735703466] Received total 7 bytes
-[1735703466] Received message: CORRECT
-[1735703474] Connection closed by server
-[1735703474] Error receiving question
+[1735739569] -------------------- Nickname Selection --------------------
+[1735739577] Sent total 6 bytes
+[1735739577] Sent message: Juanto
+[1735739577] Received total 2 bytes
+[1735739577] Received message: OK
+[1735739577] Nickname set
+[1735739577] -------------------- Theme Selection --------------------
+[1735739596] *Selected theme: 1
+[1735739596] Sent total 1 bytes
+[1735739596] Sent message: 1
+[1735739596] Received total 2 bytes
+[1735739596] Received message: OK
+[1735739596] Theme set
+[1735739596] Received total 22 bytes
+[1735739596] Received message: Who founded Microsoft?
+[1735739601] Sent total 10 bytes
+[1735739601] Sent message: Bill Gates
+[1735739601] Received total 7 bytes
+[1735739601] Received message: CORRECT
+[1735739603] Received total 72 bytes
+[1735739603] Received message: Which company introduced the first commercial personal computer in 1981?
+[1735739608] *Selected theme: 2
+[1735739608] Sent total 1 bytes
+[1735739608] Sent message: 2
+[1735739608] Received total 2 bytes
+[1735739608] Received message: OK
+[1735739608] Theme set
+[1735739608] Received total 39 bytes
+[1735739608] Received message: What is the largest ocean in the world?
+[1735739614] Sent total 4 bytes
+[1735739614] Sent message: Nile
+[1735739614] Received total 9 bytes
+[1735739614] Received message: INCORRECT
+[1735739615] Received total 39 bytes
+[1735739615] Received message: What is the longest river in the world?
+[1735739620] Sent total 4 bytes
+[1735739620] Sent message: Nile
+[1735739620] Received total 7 bytes
+[1735739620] Received message: CORRECT
+[1735739621] Received total 30 bytes
+[1735739621] Received message: What is the capital of France?
+[1735739623] Sent total 5 bytes
+[1735739623] Sent message: Paris
+[1735739623] Received total 7 bytes
+[1735739623] Received message: CORRECT
+[1735739624] Received total 40 bytes
+[1735739624] Received message: Which planet is known as the Red Planet?
+[1735739630] Sent total 4 bytes
+[1735739630] Sent message: Mars
+[1735739630] Received total 7 bytes
+[1735739630] Received message: CORRECT
+[1735739631] Received total 40 bytes
+[1735739631] Received message: What is the largest mammal in the world?
+[1735739638] Sent total 10 bytes
+[1735739638] Sent message: Blue Whale
+[1735739638] Received total 7 bytes
+[1735739638] Received message: CORRECT
+[1735739639] Received total 14 bytes
+[1735739639] Received message: COMPLETED_QUIZ
+[1735739639] Quiz completed
+[1735739639] -------------------- Theme Selection --------------------
+[1735739643] *Selected theme: 1
+[1735739643] Sent total 1 bytes
+[1735739643] Sent message: 1
+[1735739643] Received total 2 bytes
+[1735739643] Received message: OK
+[1735739643] Theme set
+[1735739656] Sent total 3 bytes
+[1735739656] Sent message: IBM
+[1735739656] Received total 7 bytes
+[1735739656] Received message: CORRECT
+[1735739657] Received total 32 bytes
+[1735739657] Received message: Who invented the World Wide Web?
+[1735739661] Sent total 7 bytes
+[1735739661] Sent message: fasdfas
+[1735739661] Received total 9 bytes
+[1735739661] Received message: INCORRECT
+[1735739662] Received total 24 bytes
+[1735739662] Received message: What does CPU stand for?
+[1735739670] Sent total 23 bytes
+[1735739670] Sent message: Central Processing Unit
+[1735739670] Received total 7 bytes
+[1735739670] Received message: CORRECT
+[1735739671] Received total 58 bytes
+[1735739671] Received message: What programming language was created by Guido van Rossum?
+[1735739674] Sent total 6 bytes
+[1735739674] Sent message: Python
+[1735739674] Received total 7 bytes
+[1735739674] Received message: CORRECT
+[1735739675] Received total 33 bytes
+[1735739675] Received message: En que lago me ganaab de la caca?
+[1735739680] Sent total 13 bytes
+[1735739680] Sent message: Lago titikaka
+[1735739680] Received total 7 bytes
+[1735739680] Received message: CORRECT
+[1735739683] Received total 14 bytes
+[1735739683] Received message: COMPLETED_QUIZ
+[1735739683] Quiz completed
+[1735739683] -------------------- Theme Selection --------------------
+[1735744259] ----------------------------------
+	CLIENT LOG
+----------------------------------
+
+[1735744259] -------------------- Nickname Selection --------------------
+[1735744261] Sent total 4 bytes
+[1735744261] Sent message: Lalo
+[1735744261] Received total 2 bytes
+[1735744261] Received message: OK
+[1735744261] Nickname set
+[1735744261] -------------------- Theme Selection --------------------
+[1735744265] *Selected theme: 1
+[1735744265] Sent total 1 bytes
+[1735744265] Sent message: 1
+[1735744265] Received total 2 bytes
+[1735744265] Received message: OK
+[1735744265] Theme set
+[1735744265] Received total 22 bytes
+[1735744265] Received message: Who founded Microsoft?
+[1735744273] ----------------------------------
+	CLIENT LOG
+----------------------------------
+
+[1735744274] -------------------- Nickname Selection --------------------
+[1735744278] Sent total 7 bytes
+[1735744278] Sent message: Jaunito
+[1735744278] Received total 2 bytes
+[1735744278] Received message: OK
+[1735744278] Nickname set
+[1735744278] -------------------- Theme Selection --------------------
+[1735744306] Invalid theme: exitquiz
+[1735744308] -------------------- Theme Selection --------------------
+[1735744317] Invalid theme: exittrivia
+[1735744318] -------------------- Theme Selection --------------------
+[1735744354] Invalid theme: endquiz
+[1735744355] -------------------- Theme Selection --------------------
+[1735744356] *Selected theme: 2
+[1735744356] Sent total 1 bytes
+[1735744356] Sent message: 2
+[1735744356] Received total 2 bytes
+[1735744356] Received message: OK
+[1735744356] Theme set
+[1735744356] *Selected theme: 2
+[1735744356] Sent total 1 bytes
+[1735744356] Sent message: 2
+[1735744356] Received total 39 bytes
+[1735744356] Received message: What is the largest ocean in the world?
+[1735744356] *Selected theme: 2
+[1735744356] Sent total 1 bytes
+[1735744356] Sent message: 2
+[1735744356] Received total 9 bytes
+[1735744356] Received message: INCORRECT
+[1735744356] *Selected theme: 2
+[1735744356] Sent total 1 bytes
+[1735744356] Sent message: 2
+[1735744356] Received total 39 bytes
+[1735744356] Received message: What is the longest river in the world?
+[1735744356] Received total 9 bytes
+[1735744356] Received message: INCORRECT
+[1735744361] Sent total 0 bytes
+[1735744361] Sent message: 
+[1735744361] Received total 30 bytes
+[1735744361] Received message: What is the capital of France?
+[1735744365] Received total 9 bytes
+[1735744365] Received message: INCORRECT
+[1735744375] Sent total 7 bytes
+[1735744375] Sent message: endquiz
+[1735744375] Received total 40 bytes
+[1735744375] Received message: Which planet is known as the Red Planet?

@@ -64,7 +64,7 @@ class TriviaClient {
       std::string input;
       std::getline(std::cin, input);
       if ( input.empty() ) {
-        printf("Input non valido, riprova\n");
+        printf("Nessun input rilevato, riprova\n");
         printf("Premi invio per continuare...");
         std::cin.ignore();
         secureInput();
@@ -134,7 +134,17 @@ bool secureReceive(std::string &message) {
     bool setTheme() {
       logMessage("-------------------- Theme Selection --------------------");
       sTheme();
-      theme = std::stoi(secureInput());
+      std::string input = secureInput();
+      try {
+        theme = std::stoi(input);
+      } catch (std::invalid_argument &e) {
+        logMessage("Invalid theme: " + input);
+        printf("Input non valido, riprova\n");
+        printf("Premi invio per continuare...");
+        std::cin.ignore();
+        setTheme();
+      }
+      logMessage("*Selected theme: " + std::to_string(theme));
       if (!secureSend(std::to_string(theme))) {
         printf("Errore nell'invio del tema, prova di nuovo\n");
         printf("Press enter to continue...");
@@ -221,8 +231,6 @@ bool secureReceive(std::string &message) {
             logMessage("Connection Failed");
             return;
         }
-
-
     }
 
     void playQuestions() {
@@ -234,9 +242,14 @@ bool secureReceive(std::string &message) {
           logMessage("Error receiving question");
           return;
         }
+        if (quesiton == "COMPLETED_QUIZ"){
+          printf("*******************************\n\tHai completato il quiz\n*******************************\n");
+          logMessage("Quiz completed");
+          setTheme();
+        }
         std::string themeString = (theme == 1) ? "Curiosita' sulla tecnologia" : "Cultura generale";
         printf("\033[2J\033[1;1H");
-        printf("\n    Quiz - %s\n*****************************\n%s\n*****************************\n", themeString.c_str(), quesiton.c_str());
+        printf("\n    Quiz - %s\n**************************************\n%s\n**************************************\n", themeString.c_str(), quesiton.c_str());
         std::string answer;
         answer = secureInput();
         if (!secureSend(answer)) {
@@ -310,8 +323,6 @@ bool secureReceive(std::string &message) {
           logMessage("Error setting theme");
           return;
         }
-        /*printf("Connessione stabilita\n");*/
-        /*logMessage("Connection established");*/
         playQuestions();
       } else if (choice == 2) {
         printf("Arrivederci\n");
