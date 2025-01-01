@@ -1,8 +1,94 @@
-[1735598212] Scelta: 1
-[1735598212] Socket created successfully
-[1735598212] Attempting to connect to server at 127.0.0.1:1234
-[1735598212] Successfully connected to server
-[1735598216] Nickname scelto: Lalo
-[1735598216] Successfully sent 4 bytes: Lalo
-[1735598216] Received 12 bytes from server
-[1735598216] Il server si è disconnesso. Il quiz è terminato.
+[1735676055] ----------------------------------
+	CLIENT LOG
+----------------------------------
+
+[1735676056] -------------------- Nickname Selection --------------------
+[1735676058] Sucessfully sent total 4 bytes
+[1735676058] Message: Lalo
+[1735676058] Received total 2 bytes
+[1735676058] Received message: OK
+[1735676058] Nickname set
+[1735676058] -------------------- Theme Selection --------------------
+[1735676060] Sucessfully sent total 1 bytes
+[1735676060] Message: 1
+[1735676060] Received total 2 bytes
+[1735676060] Received message: OK
+[1735676060] Theme set
+[1735676060] Received total 22 bytes
+[1735676060] Received message: Who founded Microsoft?
+[1735676067] Sucessfully sent total 4 bytes
+[1735676067] Message: Bill
+[1735676067] Received total 9 bytes
+[1735676067] Received message: INCORRECT
+[1735676067] Received total 72 bytes
+[1735676067] Received message: Which company introduced the first commercial personal computer in 1981?
+[1735676067] Sucessfully sent total 5 bytes
+[1735676067] Message: Gates
+[1735676067] Received total 9 bytes
+[1735676067] Received message: INCORRECT
+[1735676067] Received total 32 bytes
+[1735676067] Received message: Who invented the World Wide Web?
+[1735676072] Sucessfully sent total 9 bytes
+[1735676072] Message: fasfasfds
+[1735676072] Received total 9 bytes
+[1735676072] Received message: INCORRECT
+[1735676072] Received total 24 bytes
+[1735676072] Received message: What does CPU stand for?
+[1735676080] Sucessfully sent total 7 bytes
+[1735676080] Message: Central
+[1735676080] Received total 9 bytes
+[1735676080] Received message: INCORRECT
+[1735676080] Received total 58 bytes
+[1735676080] Received message: What programming language was created by Guido van Rossum?
+[1735676080] Sucessfully sent total 10 bytes
+[1735676080] Message: Processing
+[1735676080] Received total 9 bytes
+[1735676080] Received message: INCORRECT
+[1735676080] Received total 33 bytes
+[1735676080] Received message: En que lago me ganaab de la caca?
+[1735676080] Sucessfully sent total 4 bytes
+[1735676080] Message: Unit
+[1735676080] Received total 9 bytes
+[1735676080] Received message: INCORRECT
+[1735689204] ----------------------------------
+	CLIENT LOG
+----------------------------------
+
+[1735689209] -------------------- Nickname Selection --------------------
+[1735689211] Sucessfully sent total 4 bytes
+[1735689211] Message: Lalo
+[1735689211] Received total 2 bytes
+[1735689211] Received message: OK
+[1735689211] Nickname set
+[1735689211] -------------------- Theme Selection --------------------
+[1735689215] Sucessfully sent total 1 bytes
+[1735689215] Message: 1
+[1735689215] Received total 2 bytes
+[1735689215] Received message: OK
+[1735689215] Theme set
+[1735689215] Received total 22 bytes
+[1735689215] Received message: Who founded Microsoft?
+[1735689224] Sucessfully sent total 10 bytes
+[1735689224] Message: Bill Gates
+[1735689224] Received total 7 bytes
+[1735689224] Received message: CORRECT
+[1735689226] Received total 72 bytes
+[1735689226] Received message: Which company introduced the first commercial personal computer in 1981?
+[1735689230] Sucessfully sent total 3 bytes
+[1735689230] Message: IBM
+[1735689230] Received total 7 bytes
+[1735689230] Received message: CORRECT
+[1735689231] Received total 32 bytes
+[1735689231] Received message: Who invented the World Wide Web?
+[1735689235] Sucessfully sent total 7 bytes
+[1735689235] Message: no idea
+[1735689235] Received total 9 bytes
+[1735689235] Received message: INCORRECT
+[1735689236] Received total 24 bytes
+[1735689236] Received message: What does CPU stand for?
+[1735689243] Sucessfully sent total 23 bytes
+[1735689243] Message: Central Processing Unit
+[1735689243] Received total 65 bytes
+[1735689243] Received message: CORRECTWhat programming language was created by Guido van Rossum?
+[1735689252] Connection closed by server
+[1735689252] Error receiving question
