@@ -232,7 +232,9 @@ class TriviaClient {
           logMessage("Error receiving question");
           return;
         }
-        printf("%s\n", quesiton.c_str());
+        std::string themeString = (theme == 1) ? "Curiosita' sulla tecnologia" : "Cultura generale";
+        printf("\033[2J\033[1;1H");
+        printf("\n    Quiz - %s\n*****************************\n%s\n*****************************\n", themeString.c_str(), quesiton.c_str());
         std::string answer;
         answer = secureInput();
         if (!secureSend(answer)) {
