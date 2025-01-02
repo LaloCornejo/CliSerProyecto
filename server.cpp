@@ -11,6 +11,7 @@
 #include <thread>
 #include <unistd.h>
 #include <vector>
+#include <csignal>
 
 #define PORT 1234
 #define BUFFER_SIZE 1024
@@ -335,9 +336,20 @@ void handleClient(int clientSocket) {
   logMessage("********** EXITING handleClient **********");
 }
 
+void signalHandler(int signum) {
+  logMessage("Interrupt signal (" + std::to_string(signum) + ") received. Closing server...");
+  for (const auto &player : players) {
+    secureSend(player.first, "SERVER_TERMINATED");
+    close(player.first);
+  }
+  logMessage("Server closed.");
+  exit(signum);
+}
+
 int main() {
   logMessage("------------------------------ SERVER START -----------------------------\n");
   printScoreboard();
+  std::signal(SIGINT, signalHandler);
   try {
     techQuestions = loadQuestions("tech.txt");
     generalQuestions = loadQuestions("general.txt");

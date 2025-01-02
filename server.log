@@ -82,3 +82,11 @@ A: IBM
 [1735781550] Received message of size: 7
 [1735781550] Sent message of size: 16
 [1735781550] Quiz terminated.
+[1735825718] ------------------------------ SERVER START -----------------------------
+
+[1735825718] ********** PRINTING SCOREBOARD **********
+[1735825725] ********** ENTERING handleClient **********
+[1735825725] Received message of size: 5
+[1735825727] Received message of size: 4
+[1735825727] Sent message of size: 2
+[1735825727] ********** PRINTING SCOREBOARD **********

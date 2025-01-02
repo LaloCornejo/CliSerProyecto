@@ -314,6 +314,7 @@ class TriviaClient {
 };
 
 int main(int argc, char *argv[]) {
+  logMessage("------------------------------ CLIENT START -----------------------------\n");
   if (argc != 2) {
     std::cerr << "Uso: " << argv[0] << " <porta>\n";
     return 1;
