@@ -1,0 +1,532 @@
+[1735837254] ------------------------------ SERVER START -----------------------------
+
+[1735837254] ********** PRINTING SCOREBOARD **********
+[1735837258] ********** ENTERING handleClient **********
+[1735837258] Received message of size: 5
+[1735837260] Received message of size: 4
+[1735837260] Sent message of size: 2
+[1735837260] ********** PRINTING SCOREBOARD **********
+[1735837261] Received message of size: 1
+[1735837261] Sent message of size: 2
+[1735837261] Sent message of size: 22
+[1735837261] Sent question: Who founded Microsoft?
+Q: Who founded Microsoft?
+A: Bill Gates
+[1735837265] Received message of size: 7
+[1735837265] Sent message of size: 16
+[1735837265] Quiz terminated.
+[1735837265] Removing data for client: Lalo
+[1735837265] ********** PRINTING SCOREBOARD **********
+[1735837307] ********** ENTERING handleClient **********
+[1735837307] Received message of size: 5
+[1735837309] Received message of size: 4
+[1735837309] Sent message of size: 2
+[1735837309] ********** PRINTING SCOREBOARD **********
+[1735837310] Received message of size: 1
+[1735837310] Sent message of size: 2
+[1735837310] Sent message of size: 22
+[1735837310] Sent question: Who founded Microsoft?
+Q: Who founded Microsoft?
+A: Bill Gates
+[1735837320] Received message of size: 10
+[1735837320] Sent message of size: 7
+[1735837320] ********** PRINTING SCOREBOARD **********
+[1735837320] Sent message of size: 72
+[1735837320] Sent question: Which company introduced the first commercial personal computer in 1981?
+Q: Which company introduced the first commercial personal computer in 1981?
+A: IBM
+[1735837325] Received message of size: 3
+[1735837325] Sent message of size: 7
+[1735837325] ********** PRINTING SCOREBOARD **********
+[1735837325] Sent message of size: 32
+[1735837325] Sent question: Who invented the World Wide Web?
+Q: Who invented the World Wide Web?
+A: Tim Berners-Lee
+[1735837331] Received message of size: 10
+[1735837331] Sent message of size: 96
+[1735837331] Sent scoreboard
+[1735837331] Sent message of size: 32
+[1735837331] Sent question: Who invented the World Wide Web?
+Q: Who invented the World Wide Web?
+A: Tim Berners-Lee
+[1735837337] Received message of size: 7
+[1735837337] Sent message of size: 9
+[1735837337] ********** PRINTING SCOREBOARD **********
+[1735837337] Sent message of size: 24
+[1735837337] Sent question: What does CPU stand for?
+Q: What does CPU stand for?
+A: Central Processing Unit
+[1735837346] ********** ENTERING handleClient **********
+[1735837346] Received message of size: 5
+[1735837349] Received message of size: 4
+[1735837349] Sent message of size: 21
+[1735837353] Received message of size: 4
+[1735837353] Sent message of size: 2
+[1735837353] ********** PRINTING SCOREBOARD **********
+[1735837355] Received message of size: 1
+[1735837355] Sent message of size: 2
+[1735837355] Sent message of size: 39
+[1735837355] Sent question: What is the largest ocean in the world?
+Q: What is the largest ocean in the world?
+A: Pacific Ocean
+[1735837360] Received message of size: 4
+[1735837360] Sent message of size: 9
+[1735837360] ********** PRINTING SCOREBOARD **********
+[1735837360] Sent message of size: 39
+[1735837360] Sent question: What is the longest river in the world?
+Q: What is the longest river in the world?
+A: Nile
+[1735837364] Received message of size: 4
+[1735837364] Sent message of size: 7
+[1735837364] ********** PRINTING SCOREBOARD **********
+[1735837364] Sent message of size: 30
+[1735837364] Sent question: What is the capital of France?
+Q: What is the capital of France?
+A: Paris
+[1735837369] Received message of size: 5
+[1735837369] Sent message of size: 7
+[1735837369] ********** PRINTING SCOREBOARD **********
+[1735837369] Sent message of size: 40
+[1735837369] Sent question: Which planet is known as the Red Planet?
+Q: Which planet is known as the Red Planet?
+A: Mars
+[1735837373] Received message of size: 4
+[1735837373] Sent message of size: 7
+[1735837373] ********** PRINTING SCOREBOARD **********
+[1735837373] Sent message of size: 40
+[1735837373] Sent question: What is the largest mammal in the world?
+Q: What is the largest mammal in the world?
+A: Blue Whale
+[1735837380] Received message of size: 10
+[1735837380] Sent message of size: 7
+[1735837380] ********** PRINTING SCOREBOARD **********
+[1735837380] Sent message of size: 14
+[1735837380] ********** PRINTING SCOREBOARD **********
+[1735837384] Received message of size: 1
+[1735837384] Sent message of size: 17
+[1735837389] Received message of size: 1
+[1735837389] Sent message of size: 2
+[1735837389] Sent message of size: 22
+[1735837389] Sent question: Who founded Microsoft?
+Q: Who founded Microsoft?
+A: Bill Gates
+[1735837394] Received message of size: 10
+[1735837394] Sent message of size: 7
+[1735837394] ********** PRINTING SCOREBOARD **********
+[1735837394] Sent message of size: 72
+[1735837394] Sent question: Which company introduced the first commercial personal computer in 1981?
+Q: Which company introduced the first commercial personal computer in 1981?
+A: IBM
+[1735837398] Received message of size: 3
+[1735837398] Sent message of size: 7
+[1735837398] ********** PRINTING SCOREBOARD **********
+[1735837398] Sent message of size: 32
+[1735837398] Sent question: Who invented the World Wide Web?
+Q: Who invented the World Wide Web?
+A: Tim Berners-Lee
+[1735837401] Received message of size: 7
+[1735837401] Sent message of size: 9
+[1735837401] ********** PRINTING SCOREBOARD **********
+[1735837401] Sent message of size: 24
+[1735837401] Sent question: What does CPU stand for?
+Q: What does CPU stand for?
+A: Central Processing Unit
+[1735837409] Received message of size: 10
+[1735837409] Sent message of size: 124
+[1735837409] Sent scoreboard
+[1735837409] Sent message of size: 24
+[1735837409] Sent question: What does CPU stand for?
+Q: What does CPU stand for?
+A: Central Processing Unit
+[1735837442] Received message of size: 23
+[1735837442] Sent message of size: 7
+[1735837442] ********** PRINTING SCOREBOARD **********
+[1735837442] Sent message of size: 58
+[1735837442] Sent question: What programming language was created by Guido van Rossum?
+Q: What programming language was created by Guido van Rossum?
+A: Python
+[1735837447] Received message of size: 6
+[1735837447] Sent message of size: 7
+[1735837447] ********** PRINTING SCOREBOARD **********
+[1735837447] Sent message of size: 33
+[1735837447] Sent question: En que lago me ganaab de la caca?
+Q: En que lago me ganaab de la caca?
+A: Lago titikaka
+[1735837453] Received message of size: 13
+[1735837453] Sent message of size: 7
+[1735837453] ********** PRINTING SCOREBOARD **********
+[1735837453] Sent message of size: 14
+[1735837453] ********** PRINTING SCOREBOARD **********
+[1735837453] Sent message of size: 22
+[1735837453] Removing data for client: Juan
+[1735837453] ********** PRINTING SCOREBOARD **********
+[1735837453] ********** EXITING handleClient **********
+[1735837481] Received message of size: 7
+[1735837481] Sent message of size: 16
+[1735837481] Quiz terminated.
+[1735837481] Removing data for client: Lalo
+[1735837481] ********** PRINTING SCOREBOARD **********
+[1735837483] Interrupt signal (2) received. Closing server...
+[1735837483] Server closed.
+[1735837667] ------------------------------ SERVER START -----------------------------
+
+[1735837667] ********** PRINTING SCOREBOARD **********
+[1735837670] ********** ENTERING handleClient **********
+[1735837670] Received message of size: 5
+[1735837671] Received message of size: 4
+[1735837671] Sent message of size: 2
+[1735837671] ********** PRINTING SCOREBOARD **********
+[1735837673] Received message of size: 1
+[1735837673] Sent message of size: 2
+[1735837673] Sent message of size: 22
+[1735837673] Sent question: Who founded Microsoft?
+Q: Who founded Microsoft?
+A: Bill Gates
+[1735837674] Received message of size: 4
+[1735837674] Sent message of size: 9
+[1735837674] ********** PRINTING SCOREBOARD **********
+[1735837674] Sent message of size: 72
+[1735837674] Sent question: Which company introduced the first commercial personal computer in 1981?
+Q: Which company introduced the first commercial personal computer in 1981?
+A: IBM
+[1735837674] Received message of size: 3
+[1735837674] Sent message of size: 9
+[1735837674] ********** PRINTING SCOREBOARD **********
+[1735837674] Sent message of size: 32
+[1735837674] Sent question: Who invented the World Wide Web?
+Q: Who invented the World Wide Web?
+A: Tim Berners-Lee
+[1735837675] Received message of size: 4
+[1735837675] Sent message of size: 9
+[1735837675] ********** PRINTING SCOREBOARD **********
+[1735837675] Sent message of size: 24
+[1735837675] Sent question: What does CPU stand for?
+Q: What does CPU stand for?
+A: Central Processing Unit
+[1735837677] Received message of size: 4
+[1735837677] Sent message of size: 9
+[1735837677] ********** PRINTING SCOREBOARD **********
+[1735837677] Sent message of size: 58
+[1735837677] Sent question: What programming language was created by Guido van Rossum?
+Q: What programming language was created by Guido van Rossum?
+A: Python
+[1735837678] Received message of size: 4
+[1735837678] Sent message of size: 9
+[1735837678] ********** PRINTING SCOREBOARD **********
+[1735837678] Sent message of size: 33
+[1735837678] Sent question: En que lago me ganaab de la caca?
+Q: En que lago me ganaab de la caca?
+A: Lago titikaka
+[1735837680] Received message of size: 4
+[1735837680] Sent message of size: 9
+[1735837680] ********** PRINTING SCOREBOARD **********
+[1735837680] Sent message of size: 14
+[1735837680] ********** PRINTING SCOREBOARD **********
+[1735837682] Received message of size: 1
+[1735837682] Sent message of size: 2
+[1735837682] Sent message of size: 39
+[1735837682] Sent question: What is the largest ocean in the world?
+Q: What is the largest ocean in the world?
+A: Pacific Ocean
+[1735837683] Received message of size: 3
+[1735837683] Sent message of size: 9
+[1735837683] ********** PRINTING SCOREBOARD **********
+[1735837683] Sent message of size: 39
+[1735837683] Sent question: What is the longest river in the world?
+Q: What is the longest river in the world?
+A: Nile
+[1735837685] Received message of size: 4
+[1735837685] Sent message of size: 9
+[1735837685] ********** PRINTING SCOREBOARD **********
+[1735837685] Sent message of size: 30
+[1735837685] Sent question: What is the capital of France?
+Q: What is the capital of France?
+A: Paris
+[1735837687] Received message of size: 4
+[1735837687] Sent message of size: 9
+[1735837687] ********** PRINTING SCOREBOARD **********
+[1735837687] Sent message of size: 40
+[1735837687] Sent question: Which planet is known as the Red Planet?
+Q: Which planet is known as the Red Planet?
+A: Mars
+[1735837691] Received message of size: 4
+[1735837691] Sent message of size: 7
+[1735837691] ********** PRINTING SCOREBOARD **********
+[1735837691] Sent message of size: 40
+[1735837691] Sent question: What is the largest mammal in the world?
+Q: What is the largest mammal in the world?
+A: Blue Whale
+[1735837694] Received message of size: 6
+[1735837694] Sent message of size: 9
+[1735837694] ********** PRINTING SCOREBOARD **********
+[1735837694] Sent message of size: 14
+[1735837694] ********** PRINTING SCOREBOARD **********
+[1735837694] Sent message of size: 22
+[1735837694] Removing data for client: LAlo
+[1735837694] ********** PRINTING SCOREBOARD **********
+[1735837694] ********** EXITING handleClient **********
+[1735846028] Interrupt signal (2) received. Closing server...
+[1735846028] Server closed.
+[1735846075] ------------------------------ SERVER START -----------------------------
+
+[1735846075] ********** PRINTING SCOREBOARD **********
+[1735846079] ********** ENTERING handleClient **********
+[1735846079] Received message of size: 5
+[1735846081] Received message of size: 4
+[1735846081] Sent message of size: 2
+[1735846081] ********** PRINTING SCOREBOARD **********
+[1735846082] Received message of size: 1
+[1735846082] Sent message of size: 2
+[1735846082] Sent message of size: 22
+[1735846082] Sent question: Who founded Microsoft?
+Q: Who founded Microsoft?
+A: Bill Gates
+[1735846087] Received message of size: 4
+[1735846087] Sent message of size: 9
+[1735846087] ********** PRINTING SCOREBOARD **********
+[1735846087] Sent message of size: 72
+[1735846087] Sent question: Which company introduced the first commercial personal computer in 1981?
+Q: Which company introduced the first commercial personal computer in 1981?
+A: IBM
+[1735846088] Received message of size: 4
+[1735846088] Sent message of size: 9
+[1735846088] ********** PRINTING SCOREBOARD **********
+[1735846088] Sent message of size: 32
+[1735846088] Sent question: Who invented the World Wide Web?
+Q: Who invented the World Wide Web?
+A: Tim Berners-Lee
+[1735846090] Received message of size: 7
+[1735846090] Sent message of size: 9
+[1735846090] ********** PRINTING SCOREBOARD **********
+[1735846090] Sent message of size: 24
+[1735846090] Sent question: What does CPU stand for?
+Q: What does CPU stand for?
+A: Central Processing Unit
+[1735846092] Received message of size: 9
+[1735846092] Sent message of size: 9
+[1735846092] ********** PRINTING SCOREBOARD **********
+[1735846092] Sent message of size: 58
+[1735846092] Sent question: What programming language was created by Guido van Rossum?
+Q: What programming language was created by Guido van Rossum?
+A: Python
+[1735846093] Received message of size: 8
+[1735846093] Sent message of size: 9
+[1735846093] ********** PRINTING SCOREBOARD **********
+[1735846093] Sent message of size: 33
+[1735846093] Sent question: En que lago me ganaab de la caca?
+Q: En que lago me ganaab de la caca?
+A: Lago titikaka
+[1735846096] Received message of size: 10
+[1735846096] Sent message of size: 9
+[1735846096] ********** PRINTING SCOREBOARD **********
+[1735846096] Sent message of size: 14
+[1735846096] ********** PRINTING SCOREBOARD **********
+[1735846098] Received message of size: 1
+[1735846098] Sent message of size: 2
+[1735846098] Sent message of size: 39
+[1735846098] Sent question: What is the largest ocean in the world?
+Q: What is the largest ocean in the world?
+A: Pacific Ocean
+[1735846103] Received message of size: 8
+[1735846103] Sent message of size: 9
+[1735846103] ********** PRINTING SCOREBOARD **********
+[1735846103] Sent message of size: 39
+[1735846103] Sent question: What is the longest river in the world?
+Q: What is the longest river in the world?
+A: Nile
+[1735846105] Received message of size: 9
+[1735846105] Sent message of size: 9
+[1735846105] ********** PRINTING SCOREBOARD **********
+[1735846105] Sent message of size: 30
+[1735846105] Sent question: What is the capital of France?
+Q: What is the capital of France?
+A: Paris
+[1735846107] Received message of size: 11
+[1735846107] Sent message of size: 9
+[1735846107] ********** PRINTING SCOREBOARD **********
+[1735846107] Sent message of size: 40
+[1735846107] Sent question: Which planet is known as the Red Planet?
+Q: Which planet is known as the Red Planet?
+A: Mars
+[1735846109] Received message of size: 8
+[1735846109] Sent message of size: 9
+[1735846109] ********** PRINTING SCOREBOARD **********
+[1735846109] Sent message of size: 40
+[1735846109] Sent question: What is the largest mammal in the world?
+Q: What is the largest mammal in the world?
+A: Blue Whale
+[1735846112] Received message of size: 12
+[1735846112] Sent message of size: 9
+[1735846112] ********** PRINTING SCOREBOARD **********
+[1735846112] Sent message of size: 14
+[1735846112] ********** PRINTING SCOREBOARD **********
+[1735846112] Sent message of size: 22
+[1735846112] Removing data for client: Lalo
+[1735846112] ********** PRINTING SCOREBOARD **********
+[1735846112] ********** EXITING handleClient **********
+[1735846271] Interrupt signal (2) received. Closing server...
+[1735846271] Server closed.
+[1735846283] ------------------------------ SERVER START -----------------------------
+
+[1735846283] ********** PRINTING SCOREBOARD **********
+[1735846287] ********** ENTERING handleClient **********
+[1735846287] Received message of size: 5
+[1735846288] Received message of size: 4
+[1735846288] Sent message of size: 2
+[1735846288] ********** PRINTING SCOREBOARD **********
+[1735846289] Received message of size: 1
+[1735846289] Sent message of size: 2
+[1735846289] Sent message of size: 22
+[1735846289] Sent question: Who founded Microsoft?
+Q: Who founded Microsoft?
+A: Bill Gates
+[1735846291] Received message of size: 9
+[1735846291] Sent message of size: 9
+[1735846291] ********** PRINTING SCOREBOARD **********
+[1735846291] Sent message of size: 72
+[1735846291] Sent question: Which company introduced the first commercial personal computer in 1981?
+Q: Which company introduced the first commercial personal computer in 1981?
+A: IBM
+[1735846292] Received message of size: 12
+[1735846292] Sent message of size: 9
+[1735846292] ********** PRINTING SCOREBOARD **********
+[1735846292] Sent message of size: 32
+[1735846292] Sent question: Who invented the World Wide Web?
+Q: Who invented the World Wide Web?
+A: Tim Berners-Lee
+[1735846294] Received message of size: 12
+[1735846294] Sent message of size: 9
+[1735846294] ********** PRINTING SCOREBOARD **********
+[1735846294] Sent message of size: 24
+[1735846294] Sent question: What does CPU stand for?
+Q: What does CPU stand for?
+A: Central Processing Unit
+[1735846297] Received message of size: 10
+[1735846297] Sent message of size: 9
+[1735846297] ********** PRINTING SCOREBOARD **********
+[1735846297] Sent message of size: 58
+[1735846297] Sent question: What programming language was created by Guido van Rossum?
+Q: What programming language was created by Guido van Rossum?
+A: Python
+[1735846299] Received message of size: 10
+[1735846299] Sent message of size: 9
+[1735846299] ********** PRINTING SCOREBOARD **********
+[1735846299] Sent message of size: 33
+[1735846299] Sent question: En que lago me ganaab de la caca?
+Q: En que lago me ganaab de la caca?
+A: Lago titikaka
+[1735846301] Received message of size: 11
+[1735846301] Sent message of size: 9
+[1735846301] ********** PRINTING SCOREBOARD **********
+[1735846301] Sent message of size: 14
+[1735846301] ********** PRINTING SCOREBOARD **********
+[1735846303] Received message of size: 1
+[1735846303] Sent message of size: 17
+[1735846312] Received message of size: 1
+[1735846312] Sent message of size: 17
+[1735846675] Client disconnected: 127.0.0.1:49876
+[1735846675] Removing data for client: Lalo
+[1735846675] ********** PRINTING SCOREBOARD **********
+[1735846675] Client data not found for socket: 5
+[1735846675] ********** PRINTING SCOREBOARD **********
+[1735846678] Interrupt signal (2) received. Closing server...
+[1735846678] Server closed.
+[1735846706] ------------------------------ SERVER START -----------------------------
+
+[1735846706] ********** PRINTING SCOREBOARD **********
+[1735846712] ********** ENTERING handleClient **********
+[1735846712] Received message of size: 5
+[1735846713] Received message of size: 4
+[1735846713] Sent message of size: 2
+[1735846713] ********** PRINTING SCOREBOARD **********
+[1735846717] Received message of size: 1
+[1735846717] Sent message of size: 2
+[1735846717] Sent message of size: 22
+[1735846717] Sent question: Who founded Microsoft?
+Q: Who founded Microsoft?
+A: Bill Gates
+[1735846719] Received message of size: 7
+[1735846719] Sent message of size: 9
+[1735846719] ********** PRINTING SCOREBOARD **********
+[1735846719] Sent message of size: 72
+[1735846719] Sent question: Which company introduced the first commercial personal computer in 1981?
+Q: Which company introduced the first commercial personal computer in 1981?
+A: IBM
+[1735846721] Received message of size: 8
+[1735846721] Sent message of size: 9
+[1735846721] ********** PRINTING SCOREBOARD **********
+[1735846721] Sent message of size: 32
+[1735846721] Sent question: Who invented the World Wide Web?
+Q: Who invented the World Wide Web?
+A: Tim Berners-Lee
+[1735846723] Received message of size: 8
+[1735846723] Sent message of size: 9
+[1735846723] ********** PRINTING SCOREBOARD **********
+[1735846723] Sent message of size: 24
+[1735846723] Sent question: What does CPU stand for?
+Q: What does CPU stand for?
+A: Central Processing Unit
+[1735846725] Received message of size: 10
+[1735846725] Sent message of size: 9
+[1735846725] ********** PRINTING SCOREBOARD **********
+[1735846725] Sent message of size: 58
+[1735846725] Sent question: What programming language was created by Guido van Rossum?
+Q: What programming language was created by Guido van Rossum?
+A: Python
+[1735846726] Received message of size: 10
+[1735846726] Sent message of size: 9
+[1735846726] ********** PRINTING SCOREBOARD **********
+[1735846726] Sent message of size: 33
+[1735846726] Sent question: En que lago me ganaab de la caca?
+Q: En que lago me ganaab de la caca?
+A: Lago titikaka
+[1735846730] Received message of size: 10
+[1735846730] Sent message of size: 9
+[1735846730] ********** PRINTING SCOREBOARD **********
+[1735846730] Sent message of size: 14
+[1735846730] ********** PRINTING SCOREBOARD **********
+[1735846736] Received message of size: 1
+[1735846736] Sent message of size: 2
+[1735846736] Sent message of size: 39
+[1735846736] Sent question: What is the largest ocean in the world?
+Q: What is the largest ocean in the world?
+A: Pacific Ocean
+[1735846738] Received message of size: 10
+[1735846738] Sent message of size: 9
+[1735846738] ********** PRINTING SCOREBOARD **********
+[1735846738] Sent message of size: 39
+[1735846738] Sent question: What is the longest river in the world?
+Q: What is the longest river in the world?
+A: Nile
+[1735846740] Received message of size: 11
+[1735846740] Sent message of size: 9
+[1735846740] ********** PRINTING SCOREBOARD **********
+[1735846740] Sent message of size: 30
+[1735846740] Sent question: What is the capital of France?
+Q: What is the capital of France?
+A: Paris
+[1735846742] Received message of size: 11
+[1735846742] Sent message of size: 9
+[1735846742] ********** PRINTING SCOREBOARD **********
+[1735846742] Sent message of size: 40
+[1735846742] Sent question: Which planet is known as the Red Planet?
+Q: Which planet is known as the Red Planet?
+A: Mars
+[1735846744] Received message of size: 11
+[1735846744] Sent message of size: 9
+[1735846744] ********** PRINTING SCOREBOARD **********
+[1735846744] Sent message of size: 40
+[1735846744] Sent question: What is the largest mammal in the world?
+Q: What is the largest mammal in the world?
+A: Blue Whale
+[1735846747] Received message of size: 11
+[1735846747] Sent message of size: 9
+[1735846747] ********** PRINTING SCOREBOARD **********
+[1735846747] Sent message of size: 14
+[1735846747] ********** PRINTING SCOREBOARD **********
+[1735846747] Sent message of size: 22
+[1735846747] Removing data for client: Lalo
+[1735846747] ********** PRINTING SCOREBOARD **********
+[1735846747] ********** EXITING handleClient **********
+[1735846849] Interrupt signal (2) received. Closing server...
+[1735846849] Server closed.

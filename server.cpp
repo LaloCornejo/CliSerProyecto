@@ -278,12 +278,14 @@ void handleClient(int clientSocket) {
     std::string message;
     if (!secureReceive(clientSocket, message)) {
       close(clientSocket);
+      removeClientData(clientSocket);
       return;
     }
     if (message == "START") {
       while (true) {
         if (!secureReceive(clientSocket, message)) {
           close(clientSocket);
+          removeClientData(clientSocket);
           return;
         }
         bool nicknameTaken = false;
@@ -309,28 +311,55 @@ void handleClient(int clientSocket) {
           break;
         }
       }
-      if (!secureReceive(clientSocket, message)) {
-        close(clientSocket);
-        return;
-      }
-      bool bothCompleted = false;
-      int theme;
-      try {
-        theme = std::stoi(message);
-      } catch (const std::exception &e) {
-        logMessage("Invalid input for theme selection: " + message);
-        secureSend(clientSocket, "INVALID_THEME");
-        return;
-      }
-      if (theme == 1 || theme == 2) {
+
+      while (true) {
+        Player *currentPlayer = nullptr;
+        {
+          std::lock_guard<std::mutex> lock(playersMutex);
+          auto it = std::find_if(players.begin(), players.end(),
+                                 [clientSocket](const std::pair<int, Player> &player) {
+                                   return player.first == clientSocket;
+                                 });
+          if (it != players.end()) {
+            currentPlayer = &it->second;
+          } else {
+            logMessage("Client data not found for socket: " + std::to_string(clientSocket));
+            close(clientSocket);
+            removeClientData(clientSocket);
+            return;
+          }
+        }
+
+        if (!secureReceive(clientSocket, message)) {
+          close(clientSocket);
+          removeClientData(clientSocket);
+          return;
+        }
+        int theme;
+        try {
+          theme = std::stoi(message);
+        } catch (const std::exception &e) {
+          logMessage("Invalid input for theme selection: " + message);
+          secureSend(clientSocket, "INVALID_THEME");
+          continue;
+        }
+        if (theme != 1 && theme != 2) {
+          secureSend(clientSocket, "INVALID_THEME");
+          continue;
+        }
+        if ((theme == 1 && currentPlayer->hasCompletedTech) || (theme == 2 && currentPlayer->hasCompletedGeneral)) {
+          secureSend(clientSocket, "ALREADY_COMPLETED");
+          continue;
+        }
+
         secureSend(clientSocket, "OK");
-        // Send quiz questions
         auto &questions = (theme == 1) ? techQuestions : generalQuestions;
         for (size_t i = 0; i < questions.size(); ++i) {
           secureSend(clientSocket, questions[i].question);
           logMessage("Sent question: " + questions[i].question + "\nQ: " + questions[i].question + "\nA: " + questions[i].answer);
           if (!secureReceive(clientSocket, message)) {
             close(clientSocket);
+            removeClientData(clientSocket);
             return;
           }
           if (message == "show score") {
@@ -342,39 +371,39 @@ void handleClient(int clientSocket) {
           if (message == "endquiz") {
             secureSend(clientSocket, "Quiz terminated.");
             logMessage("Quiz terminated.");
-            removeClientData(clientSocket);
             close(clientSocket);
+            removeClientData(clientSocket);
             return;
           }
           if (message == questions[i].answer) {
-            int foundIndex = findIndex(clientSocket);
-            if (foundIndex == -1) {
-              logMessage("Error: Player not found for socket " + std::to_string(clientSocket));
-              continue;
-            }
-
             /*std::lock_guard<std::mutex> lock(playersMutex);*/
-            size_t index = static_cast<size_t>(foundIndex);
-            if (index >= players.size()) {
-              logMessage("Error: Invalid player index");
-              continue;
-            }
-
             if (theme == 1) {
-              players[index].second.techScore++;
-              logMessage(players[index].second.nickname + " has: " + std::to_string(players[index].second.techScore) + " points");
+              currentPlayer->techScore++;
             } else {
-              players[index].second.generalScore++;
-              logMessage(players[index].second.nickname + " has: " + std::to_string(players[index].second.generalScore) + " points");
+              currentPlayer->generalScore++;
             }
           }
           secureSend(clientSocket, (message == questions[i].answer) ? "CORRECT" : "INCORRECT");
           printScoreboard();
         }
+
+        {
+          std::lock_guard<std::mutex> lock(playersMutex);
+          if (theme == 1) {
+            currentPlayer->hasCompletedTech = true;
+          } else {
+            currentPlayer->hasCompletedGeneral = true;
+          }
+        }
+
         secureSend(clientSocket, "COMPLETED_QUIZ");
         printScoreboard();
-      } else {
-        secureSend(clientSocket, "INVALID_THEME");
+
+        /*std::lock_guard<std::mutex> lock(playersMutex);*/
+        if (currentPlayer->hasCompletedTech && currentPlayer->hasCompletedGeneral) {
+          secureSend(clientSocket, "BOTH_QUIZZES_COMPLETED");
+          break;
+        }
       }
     }
   } catch (const std::exception &e) {

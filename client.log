@@ -1,0 +1,269 @@
+[1735837257] ------------------------------ CLIENT START -----------------------------
+
+[1735837258] Sent: START
+[1735837260] Sent: Lalo
+[1735837260] Received: OK
+[1735837261] Sent: 1
+[1735837261] Received: OK
+[1735837261] Received: Who founded Microsoft?
+[1735837265] Sent: endquiz
+[1735837265] Received: Quiz terminated.
+[1735837281] ------------------------------ CLIENT START -----------------------------
+
+[1735837286] ------------------------------ CLIENT START -----------------------------
+
+[1735837287] Connessione fallita
+[1735837304] ------------------------------ CLIENT START -----------------------------
+
+[1735837307] Sent: START
+[1735837309] Sent: Lalo
+[1735837309] Received: OK
+[1735837310] Sent: 1
+[1735837310] Received: OK
+[1735837310] Received: Who founded Microsoft?
+[1735837320] Sent: Bill Gates
+[1735837320] Received: CORRECT
+[1735837322] Received: Which company introduced the first commercial personal computer in 1981?
+[1735837325] Sent: IBM
+[1735837325] Received: CORRECT
+[1735837326] Received: Who invented the World Wide Web?
+[1735837331] Sent: show score
+[1735837331] Received: 
+=== PUNTEGGI ATTUALI ===
+
+Quiz Tecnologia:
+Lalo: 2 punti
+
+Quiz Cultura Generale:
+Lalo: 0 punti
+
+[1735837333] Received: Who invented the World Wide Web?
+[1735837337] Sent: no idea
+[1735837337] Received: INCORRECT
+[1735837338] Received: What does CPU stand for?
+[1735837344] ------------------------------ CLIENT START -----------------------------
+
+[1735837346] Sent: START
+[1735837349] Sent: Lalo
+[1735837349] Received: NICKNAME_ALREADY_USED
+[1735837353] Sent: Juan
+[1735837353] Received: OK
+[1735837355] Sent: 2
+[1735837355] Received: OK
+[1735837355] Received: What is the largest ocean in the world?
+[1735837360] Sent: Nfaf
+[1735837360] Received: INCORRECT
+[1735837361] Received: What is the longest river in the world?
+[1735837364] Sent: Nile
+[1735837364] Received: CORRECT
+[1735837367] Received: What is the capital of France?
+[1735837369] Sent: Paris
+[1735837369] Received: CORRECT
+[1735837370] Received: Which planet is known as the Red Planet?
+[1735837373] Sent: Mars
+[1735837373] Received: CORRECT
+[1735837373] Received: What is the largest mammal in the world?
+[1735837380] Sent: Blue Whale
+[1735837380] Received: CORRECT
+[1735837381] Received: COMPLETED_QUIZ
+[1735837384] Sent: 2
+[1735837384] Received: ALREADY_COMPLETED
+[1735837389] Sent: 1
+[1735837389] Received: OK
+[1735837389] Received: Who founded Microsoft?
+[1735837394] Sent: Bill Gates
+[1735837394] Received: CORRECT
+[1735837395] Received: Which company introduced the first commercial personal computer in 1981?
+[1735837398] Sent: IBM
+[1735837398] Received: CORRECT
+[1735837398] Received: Who invented the World Wide Web?
+[1735837401] Sent: no idea
+[1735837401] Received: INCORRECT
+[1735837402] Received: What does CPU stand for?
+[1735837409] Sent: show score
+[1735837409] Received: 
+=== PUNTEGGI ATTUALI ===
+
+Quiz Tecnologia:
+Lalo: 2 punti
+Juan: 2 punti
+
+Quiz Cultura Generale:
+Juan: 4 punti
+Lalo: 0 punti
+
+[1735837435] Received: What does CPU stand for?
+[1735837442] Sent: Central Processing Unit
+[1735837442] Received: CORRECT
+[1735837443] Received: What programming language was created by Guido van Rossum?
+[1735837447] Sent: Python
+[1735837447] Received: CORRECT
+[1735837447] Received: En que lago me ganaab de la caca?
+[1735837453] Sent: Lago titikaka
+[1735837453] Received: CORRECT
+[1735837453] Received: COMPLETED_QUIZ
+[1735837460] Error sending message: 54
+[1735837481] Sent: endquiz
+[1735837481] Received: Quiz terminated.
+[1735837669] ------------------------------ CLIENT START -----------------------------
+
+[1735837670] Sent: START
+[1735837671] Sent: LAlo
+[1735837671] Received: OK
+[1735837673] Sent: 1
+[1735837673] Received: OK
+[1735837673] Received: Who founded Microsoft?
+[1735837674] Sent: fads
+[1735837674] Received: INCORRECT
+[1735837674] Received: Which company introduced the first commercial personal computer in 1981?
+[1735837674] Sent: ads
+[1735837674] Received: INCORRECT
+[1735837675] Received: Who invented the World Wide Web?
+[1735837675] Sent: fads
+[1735837675] Received: INCORRECT
+[1735837676] Received: What does CPU stand for?
+[1735837677] Sent: fasd
+[1735837677] Received: INCORRECT
+[1735837678] Received: What programming language was created by Guido van Rossum?
+[1735837678] Sent: fasd
+[1735837678] Received: INCORRECT
+[1735837679] Received: En que lago me ganaab de la caca?
+[1735837680] Sent: fasd
+[1735837680] Received: INCORRECT
+[1735837681] Received: COMPLETED_QUIZ
+[1735837682] Sent: 2
+[1735837682] Received: OK
+[1735837682] Received: What is the largest ocean in the world?
+[1735837683] Sent: fas
+[1735837683] Received: INCORRECT
+[1735837684] Received: What is the longest river in the world?
+[1735837685] Sent: gsdf
+[1735837685] Received: INCORRECT
+[1735837686] Received: What is the capital of France?
+[1735837687] Sent: gsdf
+[1735837687] Received: INCORRECT
+[1735837688] Received: Which planet is known as the Red Planet?
+[1735837691] Sent: Mars
+[1735837691] Received: CORRECT
+[1735837692] Received: What is the largest mammal in the world?
+[1735837694] Sent: gfsdgs
+[1735837694] Received: INCORRECT
+[1735837696] Received: COMPLETED_QUIZ
+[1735846079] ------------------------------ CLIENT START -----------------------------
+
+[1735846079] Sent: START
+[1735846081] Sent: Lalo
+[1735846081] Received: OK
+[1735846082] Sent: 1
+[1735846082] Received: OK
+[1735846082] Received: Who founded Microsoft?
+[1735846087] Sent: fdas
+[1735846087] Received: INCORRECT
+[1735846087] Received: Which company introduced the first commercial personal computer in 1981?
+[1735846088] Sent: fasd
+[1735846088] Received: INCORRECT
+[1735846089] Received: Who invented the World Wide Web?
+[1735846090] Sent: fdasfas
+[1735846090] Received: INCORRECT
+[1735846090] Received: What does CPU stand for?
+[1735846092] Sent: gdfsasfdg
+[1735846092] Received: INCORRECT
+[1735846092] Received: What programming language was created by Guido van Rossum?
+[1735846093] Sent: hgfdhdfg
+[1735846093] Received: INCORRECT
+[1735846094] Received: En que lago me ganaab de la caca?
+[1735846096] Sent: dsasdfadsf
+[1735846096] Received: INCORRECT
+[1735846097] Received: COMPLETED_QUIZ
+[1735846098] Sent: 2
+[1735846098] Received: OK
+[1735846098] Received: What is the largest ocean in the world?
+[1735846103] Sent: fasdfads
+[1735846103] Received: INCORRECT
+[1735846103] Received: What is the longest river in the world?
+[1735846105] Sent: fhgfshdfg
+[1735846105] Received: INCORRECT
+[1735846105] Received: What is the capital of France?
+[1735846107] Sent: hgdfdhgfdfg
+[1735846107] Received: INCORRECT
+[1735846108] Received: Which planet is known as the Red Planet?
+[1735846109] Sent: afasdfas
+[1735846109] Received: INCORRECT
+[1735846110] Received: What is the largest mammal in the world?
+[1735846112] Sent: ghdfhgdfhdfg
+[1735846112] Received: INCORRECT
+[1735846113] Received: COMPLETED_QUIZ
+[1735846286] ------------------------------ CLIENT START -----------------------------
+
+[1735846287] Sent: START
+[1735846288] Sent: Lalo
+[1735846288] Received: OK
+[1735846289] Sent: 1
+[1735846289] Received: OK
+[1735846289] Received: Who founded Microsoft?
+[1735846291] Sent: fadsfadsf
+[1735846291] Received: INCORRECT
+[1735846291] Received: Which company introduced the first commercial personal computer in 1981?
+[1735846292] Sent: gsdfgfsdgfsd
+[1735846292] Received: INCORRECT
+[1735846293] Received: Who invented the World Wide Web?
+[1735846294] Sent: fdshgdfhdfhd
+[1735846294] Received: INCORRECT
+[1735846295] Received: What does CPU stand for?
+[1735846297] Sent: fasasdfasd
+[1735846297] Received: INCORRECT
+[1735846297] Received: What programming language was created by Guido van Rossum?
+[1735846299] Sent: gfdsfdgsdf
+[1735846299] Received: INCORRECT
+[1735846299] Received: En que lago me ganaab de la caca?
+[1735846301] Sent: gsdfsdfhsfd
+[1735846301] Received: INCORRECT
+[1735846301] Received: COMPLETED_QUIZ
+[1735846303] Sent: 1
+[1735846303] Received: ALREADY_COMPLETED
+[1735846312] Sent: 1
+[1735846312] Received: ALREADY_COMPLETED
+[1735846710] ------------------------------ CLIENT START -----------------------------
+
+[1735846712] Sent: START
+[1735846713] Sent: Lalo
+[1735846713] Received: OK
+[1735846717] Sent: 1
+[1735846717] Received: OK
+[1735846717] Received: Who founded Microsoft?
+[1735846719] Sent: fasfasd
+[1735846719] Received: INCORRECT
+[1735846720] Received: Which company introduced the first commercial personal computer in 1981?
+[1735846721] Sent: fasdfasf
+[1735846721] Received: INCORRECT
+[1735846722] Received: Who invented the World Wide Web?
+[1735846723] Sent: fasdfasd
+[1735846723] Received: INCORRECT
+[1735846723] Received: What does CPU stand for?
+[1735846725] Sent: fdasfasdfa
+[1735846725] Received: INCORRECT
+[1735846725] Received: What programming language was created by Guido van Rossum?
+[1735846726] Sent: fasdfafdas
+[1735846726] Received: INCORRECT
+[1735846727] Received: En que lago me ganaab de la caca?
+[1735846730] Sent: gfdsfdgsdf
+[1735846730] Received: INCORRECT
+[1735846731] Received: COMPLETED_QUIZ
+[1735846736] Sent: 2
+[1735846736] Received: OK
+[1735846736] Received: What is the largest ocean in the world?
+[1735846738] Sent: fadsfasdfa
+[1735846738] Received: INCORRECT
+[1735846739] Received: What is the longest river in the world?
+[1735846740] Sent: gsfdgsdfsfd
+[1735846740] Received: INCORRECT
+[1735846741] Received: What is the capital of France?
+[1735846742] Sent: gsfdgsdfgsd
+[1735846742] Received: INCORRECT
+[1735846743] Received: Which planet is known as the Red Planet?
+[1735846744] Sent: gsdfgsdfgfs
+[1735846744] Received: INCORRECT
+[1735846745] Received: What is the largest mammal in the world?
+[1735846747] Sent: gsdfgsdfsdf
+[1735846747] Received: INCORRECT
+[1735846748] Received: COMPLETED_QUIZ

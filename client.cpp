@@ -58,7 +58,8 @@ class TriviaClient {
 
     bool secureReceive(std::string &message) {
       uint32_t messageLength = 0;
-      if (recv(clientSocket, &messageLength, sizeof(messageLength), 0) <= 0) {
+      int bytesReceived = recv(clientSocket, &messageLength, sizeof(messageLength), 0);
+      if (bytesReceived <= 0) {
         logMessage("Error receiving message length");
         return false;
       }
@@ -70,30 +71,29 @@ class TriviaClient {
       }
 
       std::vector<char> buffer(messageLength + 1);
-      int received = recv(clientSocket, buffer.data(), messageLength, 0);
-      if (received <= 0) {
+      bytesReceived = recv(clientSocket, buffer.data(), messageLength, 0);
+      if (bytesReceived <= 0) {
         logMessage("Error receiving message");
         return false;
       }
 
-      buffer[received] = '\0';
+      buffer[bytesReceived] = '\0';
       message = buffer.data();
       logMessage("Received: " + message);
 
+      // Check for server termination message
       if (message == "SERVER_TERMINATED") {
-        handeServerTermination();
-        return false;
+        handleServerTermination();
+        return false; // Indicate that the connection should be closed
       }
+
       return true;
     }
 
-    void handeServerTermination() {
+    void handleServerTermination() {
       clearScreen();
-      std::cout << "Il server ha terminato la connessione.\n";
-      logMessage("Server has been terminated.");
+      std::cout << "Il server è stato terminato. Il gioco non è più disponibile.\n";
       std::cin.get();
-      sleep(1);
-      exit(0);
     }
 
     void setNickname() {
@@ -184,6 +184,12 @@ class TriviaClient {
           continue;
         }
 
+        if (response == "ALREADY_COMPLETED") {
+          std::cout << "Hai già completato questo tema. Scegli un altro tema.\nPremi invio per continuare...";
+          std::cin.get();
+          continue;
+        }
+
         std::cout << response << "\nPremi invio per continuare...";
         std::cin.get();
         return false;
@@ -243,7 +249,7 @@ class TriviaClient {
           }
           std::cout << endMessage << "\nPremi invio per continuare...";
           std::cin.get();
-          exit(0);
+          break;
         }
 
         std::string result;
@@ -311,6 +317,18 @@ class TriviaClient {
           setNickname();
           if (selectTheme()) {
             playQuiz();
+            logMessage("Sessione di gioco terminata");
+            std::string bC;
+            secureReceive(bC);
+            if (bC == "BOTH_QUIZZES_COMPLETED") {
+              std::string byeMsg = "**************************\n"
+                "Hai già completato il quiz su questo tema.\n"
+                "***********************************************\n"
+                "Premi invio per terminare la sessione..."
+                "\n**********************************************\n";
+                std::cout << byeMsg;
+              std::cin.get();
+            }
           }
         } else if (input == "2") {
           std::cout << "Arrivederci!\n";
