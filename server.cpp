@@ -191,6 +191,7 @@ bool secureReceive(int clientSocket, std::string &message) {
     buffer[messageLength] = '\0';
     message = buffer.data();
     logMessage("Received message of size: " + std::to_string(message.size()));
+    logMessage("Received: " + message);
     return true;
   } catch (const std::exception &e) {
     logMessage("Exception in secureReceive: " + std::string(e.what()));
@@ -396,13 +397,19 @@ void handleClient(int clientSocket) {
           }
         }
 
-        secureSend(clientSocket, "COMPLETED_QUIZ");
-        printScoreboard();
-
+        if ((currentPlayer->hasCompletedTech && !currentPlayer->hasCompletedGeneral) ||
+            (!currentPlayer->hasCompletedTech && currentPlayer->hasCompletedGeneral)) {
+          secureSend(clientSocket, "COMPLETED_QUIZ");
+          printScoreboard();
+          continue;
+        }
         /*std::lock_guard<std::mutex> lock(playersMutex);*/
         if (currentPlayer->hasCompletedTech && currentPlayer->hasCompletedGeneral) {
           secureSend(clientSocket, "BOTH_QUIZZES_COMPLETED");
-          break;
+
+          if (secureReceive(clientSocket, message) && message == "CLIENT_FINISHED") {
+            break;
+          }
         }
       }
     }

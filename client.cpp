@@ -212,6 +212,20 @@ class TriviaClient {
           continue;
         }
 
+        if (question == "BOTH_QUIZZES_COMPLETED") {
+          clearScreen();
+          std::cout 
+            << "*******************************************\n"
+            << "\tHai completato entrambi i quiz!\n"
+            << "*******************************************\n"
+            << "Premi invio per eliminare i dati e uscire...";
+          std::cin.get();
+          if (!secureSend("CLIENT_FINISHED")) {
+            std::cout << "Errore nell'invio del messaggio di conferma.\n";
+          }
+          break;
+        }
+
         clearScreen();
         std::string themeStr =
           (theme == 1) ? "Curiosita sulla tecnologia" : "Cultura generale";
@@ -317,18 +331,6 @@ class TriviaClient {
           setNickname();
           if (selectTheme()) {
             playQuiz();
-            logMessage("Sessione di gioco terminata");
-            std::string bC;
-            secureReceive(bC);
-            if (bC == "BOTH_QUIZZES_COMPLETED") {
-              std::string byeMsg = "**************************\n"
-                "Hai già completato il quiz su questo tema.\n"
-                "***********************************************\n"
-                "Premi invio per terminare la sessione..."
-                "\n**********************************************\n";
-                std::cout << byeMsg;
-              std::cin.get();
-            }
           }
         } else if (input == "2") {
           std::cout << "Arrivederci!\n";
