@@ -5,9 +5,11 @@
 #include <fstream>
 #include <iostream>
 #include <mutex>
+#include <netinet/in.h>
 #include <sstream>
 #include <string>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <thread>
 #include <unistd.h>
 #include <vector>
@@ -105,6 +107,21 @@ void printScoreboard() {
   fflush(stdout);
 }
 
+void removeClientData(int clientSocket) {
+  /*std::lock_guard<std::mutex> lock(playersMutex);*/
+  auto it = std::find_if(players.begin(), players.end(),
+      [clientSocket](const std::pair<int, Player> &player) {
+      return player.first == clientSocket;
+      });
+  if (it != players.end()) {
+    logMessage("Removing data for client: " + it->second.nickname);
+    players.erase(it);
+  } else {
+    logMessage("Client data not found for socket: " + std::to_string(clientSocket));
+  }
+  printScoreboard();
+}
+
 bool secureSend(int clientSocket, const std::string &message) {
   try {
     uint32_t messageLength = htonl(message.size());
@@ -127,8 +144,23 @@ bool secureSend(int clientSocket, const std::string &message) {
 bool secureReceive(int clientSocket, std::string &message) {
   try {
     uint32_t messageLength = 0;
-    if (recv(clientSocket, &messageLength, sizeof(messageLength), 0) <= 0) {
-      logMessage("Error receiving message length");
+    int bytesReceived = recv(clientSocket, &messageLength, sizeof(messageLength), 0);
+    if (bytesReceived <= 0) {
+      if (bytesReceived == 0) {
+        struct sockaddr_in peerAddr;
+        socklen_t peerAddrLen = sizeof(peerAddr);
+        if (getpeername(clientSocket, (struct sockaddr *)&peerAddr, &peerAddrLen) == 0) {
+          char clientIP[INET_ADDRSTRLEN];
+          inet_ntop(AF_INET, &peerAddr.sin_addr, clientIP, sizeof(clientIP));
+          logMessage("Client disconnected: " + std::string(clientIP) + ":" + std::to_string(ntohs(peerAddr.sin_port)));
+          std::cout << "Client disconnected: " << clientIP << ":" << ntohs(peerAddr.sin_port) << std::endl;
+        } else {
+          logMessage("Client disconnected (error getting address)");
+        }
+        removeClientData(clientSocket);
+      } else {
+        logMessage("Error receiving message length");
+      }
       return false;
     }
     messageLength = ntohl(messageLength);
@@ -137,8 +169,23 @@ bool secureReceive(int clientSocket, std::string &message) {
       return false;
     }
     std::vector<char> buffer(messageLength + 1);
-    if (recv(clientSocket, buffer.data(), messageLength, 0) <= 0) {
-      logMessage("Error receiving message");
+    bytesReceived = recv(clientSocket, buffer.data(), messageLength, 0);
+    if (bytesReceived <= 0) {
+      if (bytesReceived == 0) {
+        struct sockaddr_in peerAddr;
+        socklen_t peerAddrLen = sizeof(peerAddr);
+        if (getpeername(clientSocket, (struct sockaddr *)&peerAddr, &peerAddrLen) == 0) {
+          char clientIP[INET_ADDRSTRLEN];
+          inet_ntop(AF_INET, &peerAddr.sin_addr, clientIP, sizeof(clientIP));
+          logMessage("Client disconnected: " + std::string(clientIP) + ":" + std::to_string(ntohs(peerAddr.sin_port)));
+          std::cout << "Client disconnected: " << clientIP << ":" << ntohs(peerAddr.sin_port) << std::endl;
+        } else {
+          logMessage("Client disconnected (error getting address)");
+        }
+        removeClientData(clientSocket);
+      } else {
+        logMessage("Error receiving message");
+      }
       return false;
     }
     buffer[messageLength] = '\0';
@@ -295,30 +342,31 @@ void handleClient(int clientSocket) {
           if (message == "endquiz") {
             secureSend(clientSocket, "Quiz terminated.");
             logMessage("Quiz terminated.");
+            removeClientData(clientSocket);
             close(clientSocket);
             return;
           }
-        if (message == questions[i].answer) {
-        int foundIndex = findIndex(clientSocket);
-        if (foundIndex == -1) {
-            logMessage("Error: Player not found for socket " + std::to_string(clientSocket));
-            continue;
-        }
-        
-        /*std::lock_guard<std::mutex> lock(playersMutex);*/
-        size_t index = static_cast<size_t>(foundIndex);
-        if (index >= players.size()) {
-            logMessage("Error: Invalid player index");
-            continue;
-        }
+          if (message == questions[i].answer) {
+            int foundIndex = findIndex(clientSocket);
+            if (foundIndex == -1) {
+              logMessage("Error: Player not found for socket " + std::to_string(clientSocket));
+              continue;
+            }
 
-        if (theme == 1) {
-            players[index].second.techScore++;
-            logMessage(players[index].second.nickname + " has: " + std::to_string(players[index].second.techScore) + " points");
-        } else {
-            players[index].second.generalScore++;
-            logMessage(players[index].second.nickname + " has: " + std::to_string(players[index].second.generalScore) + " points");
-        }
+            /*std::lock_guard<std::mutex> lock(playersMutex);*/
+            size_t index = static_cast<size_t>(foundIndex);
+            if (index >= players.size()) {
+              logMessage("Error: Invalid player index");
+              continue;
+            }
+
+            if (theme == 1) {
+              players[index].second.techScore++;
+              logMessage(players[index].second.nickname + " has: " + std::to_string(players[index].second.techScore) + " points");
+            } else {
+              players[index].second.generalScore++;
+              logMessage(players[index].second.nickname + " has: " + std::to_string(players[index].second.generalScore) + " points");
+            }
           }
           secureSend(clientSocket, (message == questions[i].answer) ? "CORRECT" : "INCORRECT");
           printScoreboard();
@@ -333,6 +381,7 @@ void handleClient(int clientSocket) {
     logMessage("Exception in handleClient: " + std::string(e.what()));
   }
   close(clientSocket);
+  removeClientData(clientSocket);
   logMessage("********** EXITING handleClient **********");
 }
 
@@ -340,6 +389,7 @@ void signalHandler(int signum) {
   logMessage("Interrupt signal (" + std::to_string(signum) + ") received. Closing server...");
   for (const auto &player : players) {
     secureSend(player.first, "SERVER_TERMINATED");
+    logMessage("Sent SERVER_TERMINATED to player: " + player.second.nickname);
     close(player.first);
   }
   logMessage("Server closed.");

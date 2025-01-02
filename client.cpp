@@ -79,7 +79,21 @@ class TriviaClient {
       buffer[received] = '\0';
       message = buffer.data();
       logMessage("Received: " + message);
+
+      if (message == "SERVER_TERMINATED") {
+        handeServerTermination();
+        return false;
+      }
       return true;
+    }
+
+    void handeServerTermination() {
+      clearScreen();
+      std::cout << "Il server ha terminato la connessione.\n";
+      logMessage("Server has been terminated.");
+      std::cin.get();
+      sleep(1);
+      exit(0);
     }
 
     void setNickname() {
@@ -229,7 +243,7 @@ class TriviaClient {
           }
           std::cout << endMessage << "\nPremi invio per continuare...";
           std::cin.get();
-          break;
+          exit(0);
         }
 
         std::string result;
