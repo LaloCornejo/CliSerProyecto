@@ -81,12 +81,11 @@ class TriviaClient {
       message = buffer.data();
       logMessage("Received: " + message);
 
-      // Check for server termination message
       if (message == "SERVER_TERMINATED") {
         handleServerTermination();
-        return false; // Indicate that the connection should be closed
+        exit(0);
+        return false;
       }
-
       return true;
     }
 
