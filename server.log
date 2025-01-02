@@ -1,15 +1,84 @@
-[1735762923] ------------------------------ SERVER START -----------------------------
+[1735781271] ------------------------------ SERVER START -----------------------------
 
-[1735763020] ------------------------------ SERVER START -----------------------------
+[1735781271] ********** PRINTING SCOREBOARD **********
+[1735781275] ********** ENTERING handleClient **********
+[1735781275] Received message of size: 5
+[1735781276] Received message of size: 4
+[1735781276] Sent message of size: 2
+[1735781276] ********** PRINTING SCOREBOARD **********
+[1735781277] Received message of size: 1
+[1735781277] Sent message of size: 2
+[1735781277] Sent message of size: 22
+[1735781277] Sent question: Who founded Microsoft?
+Q: Who founded Microsoft?
+A: Bill Gates
+[1735781287] Received message of size: 10
+[1735781287] Lalo has: 1 points
+[1735781287] Sent message of size: 7
+[1735781287] ********** PRINTING SCOREBOARD **********
+[1735781287] Sent message of size: 72
+[1735781287] Sent question: Which company introduced the first commercial personal computer in 1981?
+Q: Which company introduced the first commercial personal computer in 1981?
+A: IBM
+[1735781290] Received message of size: 3
+[1735781290] Lalo has: 2 points
+[1735781290] Sent message of size: 7
+[1735781290] ********** PRINTING SCOREBOARD **********
+[1735781290] Sent message of size: 32
+[1735781290] Sent question: Who invented the World Wide Web?
+Q: Who invented the World Wide Web?
+A: Tim Berners-Lee
+[1735781296] Received message of size: 7
+[1735781296] Sent message of size: 9
+[1735781296] ********** PRINTING SCOREBOARD **********
+[1735781296] Sent message of size: 24
+[1735781296] Sent question: What does CPU stand for?
+Q: What does CPU stand for?
+A: Central Processing Unit
+[1735781307] Received message of size: 23
+[1735781307] Lalo has: 3 points
+[1735781307] Sent message of size: 7
+[1735781307] ********** PRINTING SCOREBOARD **********
+[1735781307] Sent message of size: 58
+[1735781307] Sent question: What programming language was created by Guido van Rossum?
+Q: What programming language was created by Guido van Rossum?
+A: Python
+[1735781312] Received message of size: 6
+[1735781312] Lalo has: 4 points
+[1735781312] Sent message of size: 7
+[1735781312] ********** PRINTING SCOREBOARD **********
+[1735781312] Sent message of size: 33
+[1735781312] Sent question: En que lago me ganaab de la caca?
+Q: En que lago me ganaab de la caca?
+A: Lago titikaka
+[1735781319] Received message of size: 13
+[1735781319] Lalo has: 5 points
+[1735781319] Sent message of size: 7
+[1735781319] ********** PRINTING SCOREBOARD **********
+[1735781319] Sent message of size: 14
+[1735781319] ********** PRINTING SCOREBOARD **********
+[1735781319] ********** EXITING handleClient **********
+[1735781523] ------------------------------ SERVER START -----------------------------
 
-[1735763020] ********** PRINTING SCOREBOARD **********
-[1735763032] ********** ENTERING handleClient **********
-[1735763032] Received message of size: 5
-[1735763034] Received message of size: 4
-[1735763034] Sent message of size: 2
-[1735763034] ********** PRINTING SCOREBOARD **********
-[1735763037] Received message of size: 1
-[1735763037] Sent message of size: 2
-[1735763037] Sent message of size: 22
-[1735763042] Received message of size: 7
-[1735763042] Sent message of size: 16
+[1735781523] ********** PRINTING SCOREBOARD **********
+[1735781531] ********** ENTERING handleClient **********
+[1735781531] Received message of size: 5
+[1735781534] Received message of size: 4
+[1735781534] Sent message of size: 2
+[1735781534] ********** PRINTING SCOREBOARD **********
+[1735781537] Received message of size: 1
+[1735781537] Sent message of size: 2
+[1735781537] Sent message of size: 22
+[1735781537] Sent question: Who founded Microsoft?
+Q: Who founded Microsoft?
+A: Bill Gates
+[1735781546] Received message of size: 6
+[1735781546] Sent message of size: 9
+[1735781546] ********** PRINTING SCOREBOARD **********
+[1735781546] Sent message of size: 72
+[1735781546] Sent question: Which company introduced the first commercial personal computer in 1981?
+Q: Which company introduced the first commercial personal computer in 1981?
+A: IBM
+[1735781550] Received message of size: 7
+[1735781550] Sent message of size: 16
+[1735781550] Quiz terminated.
