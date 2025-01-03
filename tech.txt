@@ -1,6 +1,6 @@
 Who founded Microsoft?|Bill Gates
 Which company introduced the first commercial personal computer in 1981?|IBM
-Who invented the World Wide Web?|Tim Berners-Lee
+When was the iphone first released?|2007
 What does CPU stand for?|Central Processing Unit
 What programming language was created by Guido van Rossum?|Python
-En que lago me ganaab de la caca?|Lago titikaka
+When was the first computer virus created?|1983
