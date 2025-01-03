@@ -16,7 +16,7 @@
 #include <vector>
 #include <csignal>
 
-#define PORT 1234
+#define PORT 6969
 #define BUFFER_SIZE 1024
 #define MAX_CLIENT 10
 

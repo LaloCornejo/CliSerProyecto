@@ -11,6 +11,7 @@ server: server.cpp
 
 clean:
 	rm -f client server
+	rm -f *.log 
 
 logs:
 	rm -f *.log && touch server.log && touch client.log
