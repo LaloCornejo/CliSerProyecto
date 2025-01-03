@@ -406,6 +406,7 @@ void handleClient(int clientSocket) {
           if (currentPlayer->hasCompletedTech && currentPlayer->hasCompletedGeneral) {
             secureSend(clientSocket, "BOTH_QUIZZES_COMPLETED");
 
+            printScoreboard();
             if (secureReceive(clientSocket, message) && message == "CLIENT_FINISHED") {
               break;
             }
