@@ -235,7 +235,8 @@ class TriviaClient {
           if (!secureSend("CLIENT_FINISHED")) {
             std::cout << "Errore nell'invio del messaggio di conferma.\n";
           }
-          break;
+          /*break;*/
+          exit(EXIT_SUCCESS);
         }
 
         /*Format for questions and answers*/

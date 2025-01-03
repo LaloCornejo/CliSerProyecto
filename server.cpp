@@ -34,13 +34,16 @@ struct Question {
 
 /*Player structure(all data inside)*/
 struct Player {
-  std::string nickname;
-  int currentTheme;
-  int currentQuestionIndex;
-  int techScore;
-  int generalScore;
-  bool hasCompletedTech;
-  bool hasCompletedGeneral;
+std::string nickname;
+int currentTheme{0};
+int currentQuestionIndex{0};
+int techScore{0};
+int generalScore{0};
+bool hasCompletedTech{false};
+bool hasCompletedGeneral{false};
+
+Player(const std::string& name) : nickname(name) {}
+Player() = default;
 };
 
 /*Vector to load questions*/
@@ -253,29 +256,28 @@ void sendScoreboard(int clientSocket) {
     {
       std::shared_lock<std::shared_mutex> lock(playersMutex);
 
-      std::vector<std::pair<std::string, int>> techScores;
-      for (const auto &player : players) {
-        techScores.emplace_back(player.second.nickname, player.second.techScore);
-      }
-      std::sort(techScores.begin(), techScores.end(),
-          [](const auto &a, const auto &b) { return a.second > b.second; });
+    std::vector<std::pair<std::string, std::pair<int, int>>> scores;
+    for (const auto &player : players) {
+        scores.emplace_back(player.second.nickname, 
+            std::make_pair(player.second.techScore, player.second.generalScore));
+    }
 
-      scoreboard << "Quiz Tecnologia:\n";
-      for (const auto &score : techScores) {
-        scoreboard << score.first << ": " << score.second << " punti\n";
-      }
+    scoreboard << "Quiz Tecnologia:\n";
+    std::sort(scores.begin(), scores.end(),
+        [](const auto &a, const auto &b) { return a.second.first > b.second.first; });
+    for (const auto &score : scores) {
+        scoreboard << score.first << ": " << score.second.first << "/" 
+                << techQuestions.size() << " punti\n";
+    }
 
-      scoreboard << "\nQuiz Cultura Generale:\n";
-      std::vector<std::pair<std::string, int>> generalScores;
-      for (const auto &player : players) {
-        generalScores.emplace_back(player.second.nickname, player.second.generalScore);
-      }
-      std::sort(generalScores.begin(), generalScores.end(),
-          [](const auto &a, const auto &b) { return a.second > b.second; });
+    scoreboard << "\nQuiz Cultura Generale:\n";
+    std::sort(scores.begin(), scores.end(),
+        [](const auto &a, const auto &b) { return a.second.second > b.second.second; });
 
-      for (const auto &score : generalScores) {
-        scoreboard << score.first << ": " << score.second << " punti\n";
-      }
+    for (const auto &score : scores) {
+    scoreboard << score.first << ": " << score.second.second << "/" 
+                << generalQuestions.size() << " punti\n";
+    }
     }
 
     secureSend(clientSocket, scoreboard.str());
@@ -290,7 +292,6 @@ void handleClient(int clientSocket) {
   try {
     std::string message;
     if (!secureReceive(clientSocket, message)) {
-      logMessage("Failed to receive initial message from client.");
       close(clientSocket);
       removeClientData(clientSocket);
       return;
@@ -298,7 +299,6 @@ void handleClient(int clientSocket) {
     if (message == "START") {
       while (true) {
         if (!secureReceive(clientSocket, message)) {
-          logMessage("Failed to receive nickname from client.");
           close(clientSocket);
           removeClientData(clientSocket);
           return;
@@ -316,7 +316,7 @@ void handleClient(int clientSocket) {
         if (nicknameTaken) {
           secureSend(clientSocket, "NICKNAME_ALREADY_USED");
         } else {
-          Player newPlayer = {message, 0, 0, 0, 0, false, false};
+        Player newPlayer(message);
           {
             std::unique_lock<std::shared_mutex> lock(playersMutex);
             players.emplace_back(clientSocket, newPlayer);
@@ -346,7 +346,6 @@ void handleClient(int clientSocket) {
         }
 
         if (!secureReceive(clientSocket, message)) {
-          logMessage("Failed to receive theme selection from client.");
           close(clientSocket);
           removeClientData(clientSocket);
           return;
@@ -363,9 +362,16 @@ void handleClient(int clientSocket) {
           secureSend(clientSocket, "INVALID_THEME");
           continue;
         }
-        if ((theme == 1 && currentPlayer->hasCompletedTech) || (theme == 2 && currentPlayer->hasCompletedGeneral)) {
-          secureSend(clientSocket, "ALREADY_COMPLETED");
-          continue;
+        bool isCompleted = false;
+        {
+        std::shared_lock<std::shared_mutex> lock(playersMutex);
+        isCompleted = (theme == 1 && currentPlayer->hasCompletedTech) || 
+                    (theme == 2 && currentPlayer->hasCompletedGeneral);
+        }
+        if (isCompleted) {
+        logMessage("Player " + currentPlayer->nickname + " attempted to repeat completed theme: " + std::to_string(theme));
+        secureSend(clientSocket, "ALREADY_COMPLETED");
+        continue;
         }
 
         secureSend(clientSocket, "OK");
@@ -374,14 +380,13 @@ void handleClient(int clientSocket) {
           secureSend(clientSocket, questions[i].question);
           logMessage("Sent question: " + questions[i].question);
           if (!secureReceive(clientSocket, message)) {
-            logMessage("Failed to receive answer from client.");
             close(clientSocket);
             removeClientData(clientSocket);
             return;
           }
           if (message == "show score") {
             sendScoreboard(clientSocket);
-            --i; 
+            --i;
             logMessage("Sent scoreboard");
             continue;
           }
@@ -392,48 +397,86 @@ void handleClient(int clientSocket) {
             removeClientData(clientSocket);
             return;
           }
-          bool isCorrect = message == questions[i].answer;
-          {
+        if (message == questions[i].answer) {
+        std::string playerName;
+        {
             std::unique_lock<std::shared_mutex> lock(playersMutex);
-            if (isCorrect) {
-              if (theme == 1) {
-                currentPlayer->techScore++;
-                logMessage("Player " + currentPlayer->nickname + " scored a point in tech quiz, now has: " + std::to_string(currentPlayer->techScore));
-              } else {
-                currentPlayer->generalScore++;
-                logMessage("Player " + currentPlayer->nickname + " scored a point in general quiz, now has: " + std::to_string(currentPlayer->generalScore));
-              }
+            auto it = std::find_if(players.begin(), players.end(),
+                [clientSocket](const std::pair<int, Player>& player) {
+                return player.first == clientSocket;
+                });
+            if (it != players.end()) {
+            if (theme == 1) {
+                it->second.techScore++;
+                playerName = it->second.nickname;
+                logMessage("Player " + playerName + " scored a point in tech quiz, now has: " + std::to_string(it->second.techScore));
+            } else {
+                it->second.generalScore++;
+                playerName = it->second.nickname;
+                logMessage("Player " + playerName + " scored a point in general quiz, now has: " + std::to_string(it->second.generalScore));
             }
+            }
+        }
           }
-          secureSend(clientSocket, isCorrect ? "CORRECT" : "INCORRECT");
+          secureSend(clientSocket, (message == questions[i].answer) ? "CORRECT" : "INCORRECT");
           printScoreboard();
         }
 
         {
-          std::unique_lock<std::shared_mutex> lock(playersMutex);
-          if (theme == 1) {
-            currentPlayer->hasCompletedTech = true;
-          } else {
-            currentPlayer->hasCompletedGeneral = true;
-          }
+        std::unique_lock<std::shared_mutex> lock(playersMutex);
+        auto it = std::find_if(players.begin(), players.end(),
+            [clientSocket](const std::pair<int, Player>& player) {
+            return player.first == clientSocket;
+            });
+        
+        if (it != players.end()) {
+            if (theme == 1) {
+                it->second.hasCompletedTech = true;
+                logMessage("Player " + it->second.nickname + " completed tech quiz with score: " + 
+                        std::to_string(it->second.techScore) + "/" + std::to_string(techQuestions.size()));
+            } else {
+                it->second.hasCompletedGeneral = true;
+                logMessage("Player " + it->second.nickname + " completed general quiz with score: " + 
+                        std::to_string(it->second.generalScore) + "/" + std::to_string(generalQuestions.size()));
+            }
+            currentPlayer = &it->second;
+        }
         }
 
-        if ((currentPlayer->hasCompletedTech && !currentPlayer->hasCompletedGeneral) ||
-            (!currentPlayer->hasCompletedTech && currentPlayer->hasCompletedGeneral)) {
-          secureSend(clientSocket, "COMPLETED_QUIZ");
-          printScoreboard();
-          continue;
+        bool oneQuizCompleted = false;
+        {
+        std::shared_lock<std::shared_mutex> lock(playersMutex);
+        oneQuizCompleted = (currentPlayer->hasCompletedTech && !currentPlayer->hasCompletedGeneral) ||
+                        (!currentPlayer->hasCompletedTech && currentPlayer->hasCompletedGeneral);
+        }
+        if (oneQuizCompleted) {
+        logMessage("Player " + currentPlayer->nickname + " completed one quiz, can continue with the other");
+        secureSend(clientSocket, "COMPLETED_QUIZ");
+        printScoreboard();
+        continue;
         }
         {
-          std::unique_lock<std::shared_mutex> lock(playersMutex);
-          if (currentPlayer->hasCompletedTech && currentPlayer->hasCompletedGeneral) {
-            secureSend(clientSocket, "BOTH_QUIZZES_COMPLETED");
-            printScoreboard();
-            if (secureReceive(clientSocket, message) && message == "CLIENT_FINISHED") {
-              break;
-            }
-          }
+        bool bothCompleted = false;
+        {
+        std::shared_lock<std::shared_mutex> lock(playersMutex);
+        bothCompleted = currentPlayer->hasCompletedTech && currentPlayer->hasCompletedGeneral;
         }
+
+        if (bothCompleted) {
+        secureSend(clientSocket, "BOTH_QUIZZES_COMPLETED");
+        logMessage("Player " + currentPlayer->nickname + " completed both quizzes");
+        printScoreboard();
+        
+        if (!secureReceive(clientSocket, message)) {
+            logMessage("Failed to receive final confirmation from client");
+        } else if (message != "CLIENT_FINISHED") {
+            logMessage("Unexpected final message from client: " + message);
+        }
+        
+        secureSend(clientSocket, "CLOSING_CONNECTION");
+        break;
+        }
+    }
       }
     }
   } catch (const std::exception &e) {
