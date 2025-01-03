@@ -7,6 +7,7 @@
 #include <mutex>
 #include <shared_mutex>
 #include <netinet/in.h>
+#include <signal.h>
 #include <sstream>
 #include <string>
 #include <sys/socket.h>
@@ -20,15 +21,18 @@
 #define BUFFER_SIZE 1024
 #define MAX_CLIENT 10
 
+/*Global variables*/
 std::ofstream logFile("server.log", std::ios::app);
 std::shared_mutex playersMutex;
 std::mutex questionsMutex;
 
+/*Questions structure*/
 struct Question {
   std::string question;
   std::string answer;
 };
 
+/*Player structure(all data inside)*/
 struct Player {
   std::string nickname;
   int currentTheme;
@@ -39,15 +43,19 @@ struct Player {
   bool hasCompletedGeneral;
 };
 
+/*Vector to load questions*/
 std::vector<Question> techQuestions;
 std::vector<Question> generalQuestions;
+/*Vector of players using pair to link player with socket*/
 std::vector<std::pair<int, Player>> players;
 
+/*Function to log messages with timestamps*/
 void logMessage(const std::string &message) {
   auto now = std::chrono::system_clock::now();
   logFile << "[" << std::chrono::system_clock::to_time_t(now) << "] " << message << std::endl;
 }
 
+/*Function to print scoreboard, sorts by scores using stringstream to make easy format*/
 void printScoreboard() {
   logMessage("********** PRINTING SCOREBOARD **********");
   std::stringstream ss;
@@ -68,20 +76,24 @@ void printScoreboard() {
     }
 
     ss << "\nPuntaggi Tecnologia:\n";
+    /*Sorting players by tech score*/
     std::vector<std::pair<int, Player>> sortedPlayersTech = players;
     std::sort(sortedPlayersTech.begin(), sortedPlayersTech.end(), [](const auto &a, const auto &b) {
         return a.second.techScore > b.second.techScore;
         });
+    /*Printing sorted players*/
     for (const auto &player_pair : sortedPlayersTech) {
       const auto &player = player_pair.second;
       ss << "-> " << player.nickname << ": " << player.techScore << "/" << techQuestions.size() << "\n";
     }
 
     ss << "\nPuntaggi Cultura Generale:\n";
+    /*Sortting players by general score*/
     std::vector<std::pair<int, Player>> sortedPlayersGeneral = players;
     std::sort(sortedPlayersGeneral.begin(), sortedPlayersGeneral.end(), [](const auto &a, const auto &b) {
         return a.second.generalScore > b.second.generalScore;
         });
+    /*Printing sorted players*/
     for (const auto &player_pair : sortedPlayersGeneral) {
       const auto &player = player_pair.second;
       ss << "-> " << player.nickname << ": " << player.generalScore << "/" << generalQuestions.size() << "\n";
@@ -109,6 +121,7 @@ void printScoreboard() {
   fflush(stdout);
 }
 
+/*Function to load questions from file*/
 std::vector<Question> loadQuestions(const std::string &filename) {
   try {
     std::lock_guard<std::mutex> lock(questionsMutex);
@@ -134,6 +147,7 @@ std::vector<Question> loadQuestions(const std::string &filename) {
   }
 }
 
+/*After client acepting to finish the quiz, the server will send a message to the client to close the connection and remove the client data from the server*/
 void removeClientData(int clientSocket) {
   {
     std::unique_lock<std::shared_mutex> lock(playersMutex);
@@ -151,6 +165,7 @@ void removeClientData(int clientSocket) {
   printScoreboard();
 }
 
+/*Function to send messages to the client, first sends the length of the message and then the message itself*/
 bool secureSend(int clientSocket, const std::string &message) {
   try {
     uint32_t messageLength = htonl(message.size());
@@ -170,6 +185,7 @@ bool secureSend(int clientSocket, const std::string &message) {
   }
 }
 
+/*Function to receive messages from the client, first receives the length of the message and then the message itself*/
 bool secureReceive(int clientSocket, std::string &message) {
   try {
     uint32_t messageLength = 0;
@@ -228,6 +244,7 @@ bool secureReceive(int clientSocket, std::string &message) {
   }
 }
 
+/*Function to send the scoreboard to the client*/
 void sendScoreboard(int clientSocket) {
   try {
     std::ostringstream scoreboard;
@@ -267,11 +284,13 @@ void sendScoreboard(int clientSocket) {
   }
 }
 
+/*Function to handle the client, first receives the nickname, then the theme selection, then the questions and answers, then the scoreboard and finally the end of the quiz*/
 void handleClient(int clientSocket) {
   logMessage("********** ENTERING handleClient **********");
   try {
     std::string message;
     if (!secureReceive(clientSocket, message)) {
+      logMessage("Failed to receive initial message from client.");
       close(clientSocket);
       removeClientData(clientSocket);
       return;
@@ -279,6 +298,7 @@ void handleClient(int clientSocket) {
     if (message == "START") {
       while (true) {
         if (!secureReceive(clientSocket, message)) {
+          logMessage("Failed to receive nickname from client.");
           close(clientSocket);
           removeClientData(clientSocket);
           return;
@@ -326,6 +346,7 @@ void handleClient(int clientSocket) {
         }
 
         if (!secureReceive(clientSocket, message)) {
+          logMessage("Failed to receive theme selection from client.");
           close(clientSocket);
           removeClientData(clientSocket);
           return;
@@ -353,13 +374,14 @@ void handleClient(int clientSocket) {
           secureSend(clientSocket, questions[i].question);
           logMessage("Sent question: " + questions[i].question);
           if (!secureReceive(clientSocket, message)) {
+            logMessage("Failed to receive answer from client.");
             close(clientSocket);
             removeClientData(clientSocket);
             return;
           }
           if (message == "show score") {
             sendScoreboard(clientSocket);
-            --i;
+            --i; 
             logMessage("Sent scoreboard");
             continue;
           }
@@ -370,9 +392,10 @@ void handleClient(int clientSocket) {
             removeClientData(clientSocket);
             return;
           }
-          if (message == questions[i].answer) {
-            {
-              std::unique_lock<std::shared_mutex> lock(playersMutex);
+          bool isCorrect = message == questions[i].answer;
+          {
+            std::unique_lock<std::shared_mutex> lock(playersMutex);
+            if (isCorrect) {
               if (theme == 1) {
                 currentPlayer->techScore++;
                 logMessage("Player " + currentPlayer->nickname + " scored a point in tech quiz, now has: " + std::to_string(currentPlayer->techScore));
@@ -382,7 +405,7 @@ void handleClient(int clientSocket) {
               }
             }
           }
-          secureSend(clientSocket, (message == questions[i].answer) ? "CORRECT" : "INCORRECT");
+          secureSend(clientSocket, isCorrect ? "CORRECT" : "INCORRECT");
           printScoreboard();
         }
 
@@ -405,7 +428,6 @@ void handleClient(int clientSocket) {
           std::unique_lock<std::shared_mutex> lock(playersMutex);
           if (currentPlayer->hasCompletedTech && currentPlayer->hasCompletedGeneral) {
             secureSend(clientSocket, "BOTH_QUIZZES_COMPLETED");
-
             printScoreboard();
             if (secureReceive(clientSocket, message) && message == "CLIENT_FINISHED") {
               break;
@@ -422,6 +444,7 @@ void handleClient(int clientSocket) {
   logMessage("********** EXITING handleClient **********");
 }
 
+/*Function to handle the signal interrupt and terminate the server*/
 void signalHandler(int signum) {
   logMessage("Interrupt signal (" + std::to_string(signum) + ") received. Closing server...");
   {
@@ -436,10 +459,17 @@ void signalHandler(int signum) {
   exit(signum);
 }
 
+/*Function to handle the SIGPIPE signal*/
+void handleSigpipe(int sig) {
+  logMessage("SIGPIPE received. Ignoring.");
+}
+
+/*Main function, loads questions, creates server socket, binds it, listens for clients and creates a thread for each client*/
 int main() {
   logMessage("------------------------------ SERVER START -----------------------------");
   std::signal(SIGINT, signalHandler);
   std::signal(SIGTERM, signalHandler);
+  signal(SIGPIPE, handleSigpipe);
   printScoreboard();
   try {
     techQuestions = loadQuestions("tech.txt");
@@ -486,4 +516,3 @@ int main() {
   }
   return 0;
 }
-

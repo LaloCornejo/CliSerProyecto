@@ -8,11 +8,14 @@
 #include <unistd.h>
 #include <vector>
 
+/*Max size of buffer*/
 #define BUFFER_SIZE 1024
 
+/*Global variables*/
 std::ofstream logFile("client.log", std::ios::out | std::ios::app);
 std::mutex logMutex;
 
+/*Function to log messages with timestamps*/
 void logMessage(const std::string &message) {
   std::lock_guard<std::mutex> lock(logMutex);
   auto now = std::chrono::system_clock::now();
@@ -20,8 +23,10 @@ void logMessage(const std::string &message) {
     << std::endl;
 }
 
+/*Function to clear the screen*/
 void clearScreen() { std::cout << "\033[2J\033[1;1H"; }
 
+/*Format of the firs menu*/
 void showMenu() {
   clearScreen();
   std::cout << "\n==- Trivia Quiz Game -==\n"
@@ -32,6 +37,7 @@ void showMenu() {
     << "La tua scelta: ";
 }
 
+/*TriviaClient class*/
 class TriviaClient {
   private:
     int clientSocket;
@@ -40,6 +46,7 @@ class TriviaClient {
     int port;
     bool isConnected;
 
+    /*Function to send messages to the client, first sends the length of the message and then the message itself*/
     bool secureSend(const std::string &message) {
       uint32_t messageLength = htonl(message.size());
       if (send(clientSocket, &messageLength, sizeof(messageLength), 0) < 0) {
@@ -56,6 +63,7 @@ class TriviaClient {
       return true;
     }
 
+    /*Function to receive messages from the client, first receives the length of the message and then the message itself*/
     bool secureReceive(std::string &message) {
       uint32_t messageLength = 0;
       int bytesReceived = recv(clientSocket, &messageLength, sizeof(messageLength), 0);
@@ -89,12 +97,14 @@ class TriviaClient {
       return true;
     }
 
+    /*Clears screen and display termination message*/
     void handleServerTermination() {
       clearScreen();
       std::cout << "Il server è stato terminato. Il gioco non è più disponibile.\n";
       std::cin.get();
     }
 
+    /*Function to set the nickname*/
     void setNickname() {
       while (true) {
         clearScreen();
@@ -138,6 +148,7 @@ class TriviaClient {
       }
     }
 
+    /*Function to select the theme*/
     bool selectTheme() {
       while (true) {
         clearScreen();
@@ -195,6 +206,7 @@ class TriviaClient {
       }
     }
 
+    /*Function to play the quiz*/
     void playQuiz() {
       while (true) {
         std::string question;
@@ -211,6 +223,7 @@ class TriviaClient {
           continue;
         }
 
+        /*what to do if both quizez are completed*/
         if (question == "BOTH_QUIZZES_COMPLETED") {
           clearScreen();
           std::cout 
@@ -225,6 +238,7 @@ class TriviaClient {
           break;
         }
 
+        /*Format for questions and answers*/
         clearScreen();
         std::string themeStr =
           (theme == 1) ? "Curiosita sulla tecnologia" : "Cultura generale";
@@ -237,6 +251,7 @@ class TriviaClient {
         std::string answer;
         std::getline(std::cin, answer);
 
+        /*Special case for show score and endquiz*/
         if (!secureSend(answer)) {
           std::cout << "Errore nell'invio della risposta.\n";
           return;
@@ -265,6 +280,7 @@ class TriviaClient {
           break;
         }
 
+        /*Correct or incorrect handling*/
         std::string result;
         if (!secureReceive(result)) {
           std::cout << "Errore nella ricezione del risultato.\n";
@@ -283,6 +299,7 @@ class TriviaClient {
   public:
     TriviaClient(int serverPort) : port(serverPort), isConnected(false) {}
 
+    /*Function to connect to the server*/
     bool connectToServer() {
       struct sockaddr_in serverAddr;
 
@@ -306,12 +323,14 @@ class TriviaClient {
       return true;
     }
 
+    /*Main function to start the client*/
     void start() {
       std::string input;
       while (true) {
         showMenu();
         std::getline(std::cin, input);
 
+        /*Main logic of the client*/
         if (input == "1") {
           if (!isConnected && !connectToServer()) {
             std::cout << "Impossibile connettersi al server.\nPremi invio per "
@@ -340,12 +359,14 @@ class TriviaClient {
         }
       }
 
+      /*Close when finished*/
       if (isConnected) {
         close(clientSocket);
       }
     }
 };
 
+/*main waiting for argument of port*/
 int main(int argc, char *argv[]) {
   logMessage("------------------------------ CLIENT START -----------------------------\n");
   if (argc != 2) {
@@ -359,6 +380,7 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
+  /*START*/
   TriviaClient client(port);
   client.start();
 
